@@ -10,7 +10,10 @@ import React from "react";
 import Script from "next/script";
 import type { ActionState } from "@/app/actions";
 import { checkoutStorefront, confirmRazorpayPayment } from "@/app/actions";
-import { getStorefrontTemplate } from "@/lib/storefront-templates";
+import {
+  getStorefrontTemplate,
+  resolveStorefrontMotion,
+} from "@/lib/storefront-templates";
 import { OrderChat } from "@/app/_components/order-chat";
 import { ShopRecommendations } from "@/app/_components/shop-recommendations";
 import { InstallStoreApp } from "@/app/_components/install-store-app";
@@ -96,21 +99,24 @@ export function Storefront({
     const dx = to.left + to.width / 2 - (from.left + from.width / 2);
     const dy = to.top + to.height / 2 - (from.top + from.height / 2);
     const distance = Math.hypot(dx, dy) || 1;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const motion = resolveStorefrontMotion(template.design.motion, reducedMotion);
+    if (!motion.enabled) return;
     const profile = {
-      fashion: { lift: 52, rotation: -7, duration: 680 },
-      beauty: { lift: 40, rotation: -3, duration: 700 },
-      electronics: { lift: 18, rotation: 2, duration: 420 },
-      home: { lift: 46, rotation: 2, duration: 620 },
-      grocery: { lift: 16, rotation: 0, duration: 360 },
-      food: { lift: 36, rotation: 5, duration: 460 },
-      artisan: { lift: 48, rotation: -4, duration: 660 },
-      luxury: { lift: 58, rotation: 0, duration: 780 },
-      local: { lift: 26, rotation: 5, duration: 480 },
-      b2b: { lift: 14, rotation: 0, duration: 380 },
-      subscription: { lift: 34, rotation: 3, duration: 560 },
-      services: { lift: 18, rotation: 0, duration: 400 },
-      marketplace: { lift: 30, rotation: 4, duration: 500 },
-      essential: { lift: 28, rotation: 2, duration: 500 },
+      fashion: { lift: 52, rotation: -7 },
+      beauty: { lift: 40, rotation: -3 },
+      electronics: { lift: 18, rotation: 2 },
+      home: { lift: 46, rotation: 2 },
+      grocery: { lift: 16, rotation: 0 },
+      food: { lift: 36, rotation: 5 },
+      artisan: { lift: 48, rotation: -4 },
+      luxury: { lift: 58, rotation: 0 },
+      local: { lift: 26, rotation: 5 },
+      b2b: { lift: 14, rotation: 0 },
+      subscription: { lift: 34, rotation: 3 },
+      services: { lift: 18, rotation: 0 },
+      marketplace: { lift: 30, rotation: 4 },
+      essential: { lift: 28, rotation: 2 },
     }[template.id];
     const control = {
       x: dx * 0.5 - (dy / distance) * profile.lift,
@@ -188,7 +194,7 @@ export function Storefront({
         },
       ],
       {
-        duration: profile.duration,
+        duration: motion.durationMs,
         easing: "cubic-bezier(.22,.75,.25,1)",
         fill: "forwards",
       },
@@ -264,6 +270,11 @@ export function Storefront({
     <main
       id="top"
       className={`storefront theme-${template.id} archetype-${template.id}`}
+      data-typography={template.design.typography}
+      data-rhythm={template.design.rhythm}
+      data-density={template.design.density}
+      data-imagery={template.design.imagery}
+      data-motion={template.design.motion.character}
     >
       {paymentEnabled && (
         <Script

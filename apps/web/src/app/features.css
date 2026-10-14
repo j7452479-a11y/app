@@ -559,6 +559,258 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Sector profiles: shared commerce markup, distinct editorial systems. */
+.storefront[data-typography],
+.storefront-site[data-typography],
+.sf-information-page[data-typography],
+.store-pages-preview[data-typography] {
+  --sf-font-body: "DM Sans Variable", "DM Sans", sans-serif;
+  --sf-font-display: "Manrope Variable", Manrope, sans-serif;
+  font-family: var(--sf-font-body);
+}
+.storefront :is(.sf-copy h1, .sf-section-head h2, .sf-information-heading h1),
+.storefront-site :is(.sf-information-heading h1, .sf-logo),
+.sf-information-page .sf-information-heading h1,
+.store-pages-preview .store-pages-preview-title h3 {
+  font-family: var(--sf-font-display);
+}
+.storefront .sf-hero {
+  align-items: center;
+  gap: clamp(30px, 6vw, 84px);
+}
+.storefront .sf-visual,
+.storefront .sf-visual > img,
+.storefront .sf-product-image img,
+.storefront .sf-information-story img {
+  transition: transform 520ms cubic-bezier(.2,.7,.2,1), border-radius 360ms ease;
+}
+.storefront .sf-grid { align-items: start; }
+.storefront .sf-product-image { overflow: hidden; }
+.storefront .sf-product-image img { object-fit: cover; }
+.storefront-site .sf-information-heading { text-align: left; }
+.storefront-site .sf-information-content { max-width: 760px; }
+.store-pages-preview .store-pages-preview-image-band { background-position: center; }
+
+/* Balanced, approachable default with a generous three-column catalogue. */
+.archetype-essential {
+  --sf-font-display: "Manrope Variable", Manrope, sans-serif;
+}
+.archetype-essential .sf-hero { grid-template-columns: 1fr .92fr; }
+.archetype-essential .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.archetype-essential .sf-product-image { aspect-ratio: 1 / 1.05; height: auto; }
+
+/* Fashion reads like a collection story with portrait product photography. */
+.archetype-fashion { --sf-font-display: Georgia, "Times New Roman", serif; }
+.archetype-fashion .sf-hero { grid-template-columns: .76fr 1.24fr; }
+.archetype-fashion .sf-copy { max-width: 510px; }
+.archetype-fashion .sf-copy h1 { font-size: clamp(52px, 7vw, 92px); font-weight: 400; line-height: .98; }
+.archetype-fashion .sf-visual { min-height: 560px; border-radius: 48% 48% 3px 3px; }
+.archetype-fashion .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
+.archetype-fashion .sf-product-image { aspect-ratio: 4 / 5; height: auto; }
+.archetype-fashion .sf-product:nth-child(3n + 2) { margin-top: 42px; }
+
+/* Beauty guides the shopper through a calm, considered routine. */
+.archetype-beauty { --sf-font-display: "DM Sans Variable", sans-serif; }
+.archetype-beauty .sf-hero { grid-template-columns: .88fr 1.12fr; }
+.archetype-beauty .sf-copy h1 { max-width: 560px; font-size: clamp(48px, 6vw, 76px); font-weight: 500; }
+.archetype-beauty .sf-visual { min-height: 500px; border-radius: 46% 46% 12px 12px; }
+.archetype-beauty .sf-story { border: 0; text-align: center; }
+.archetype-beauty .sf-story p { margin-inline: auto; }
+.archetype-beauty .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.archetype-beauty .sf-product { border-radius: 18px; }
+.archetype-beauty .sf-product-image { aspect-ratio: 1 / 1.12; height: auto; border-radius: 16px 16px 0 0; }
+
+/* Electronics emphasizes comparison, precision and square product views. */
+.archetype-electronics { --sf-font-display: "Manrope Variable", sans-serif; }
+.archetype-electronics .sf-hero { grid-template-columns: 1fr 1fr; }
+.archetype-electronics .sf-copy h1 { max-width: 620px; font-size: clamp(42px, 5.2vw, 68px); letter-spacing: -.045em; }
+.archetype-electronics .sf-visual { min-height: 430px; border-radius: 8px; }
+.archetype-electronics .sf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.archetype-electronics .sf-product { border-radius: 5px; }
+.archetype-electronics .sf-product-image { aspect-ratio: 1 / 1; height: auto; }
+.archetype-electronics .sf-product-detail strong,
+.archetype-b2b .sf-product-detail strong { font-variant-numeric: tabular-nums; }
+
+/* Home goods give room scenes priority and let the product grid breathe. */
+.archetype-home { --sf-font-display: Georgia, "Times New Roman", serif; }
+.archetype-home .sf-hero { grid-template-columns: .78fr 1.22fr; }
+.archetype-home .sf-copy h1 { font-size: clamp(48px, 6.2vw, 80px); font-weight: 400; }
+.archetype-home .sf-visual { min-height: 540px; border-radius: 4px; }
+.archetype-home .sf-story { max-width: 1060px; padding-block: 44px 64px; }
+.archetype-home .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+.archetype-home .sf-product-image { aspect-ratio: 1 / 1.12; height: auto; }
+
+/* Grocery prioritizes speed: compact cards and a high-capacity browse grid. */
+.archetype-grocery .sf-hero { grid-template-columns: .92fr 1.08fr; padding-block: 38px; }
+.archetype-grocery .sf-copy h1 { font-size: clamp(42px, 5vw, 64px); }
+.archetype-grocery .sf-visual { min-height: 360px; border-radius: 14px; }
+.archetype-grocery .sf-products { padding-top: 28px; }
+.archetype-grocery .sf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.archetype-grocery .sf-product { border-radius: 7px; }
+.archetype-grocery .sf-product-image { aspect-ratio: 1 / .94; height: auto; }
+.archetype-grocery .sf-product-detail { padding: 11px 10px 6px; }
+.archetype-grocery .sf-add { margin-inline: 10px; }
+
+/* Food borrows from a menu: generous dish names, aligned prices, warm crops. */
+.archetype-food { --sf-font-display: Georgia, "Times New Roman", serif; }
+.archetype-food .sf-hero { grid-template-columns: .9fr 1.1fr; }
+.archetype-food .sf-copy h1 { font-size: clamp(50px, 6.5vw, 82px); font-weight: 400; }
+.archetype-food .sf-visual { min-height: 470px; border-radius: 46% 46% 4px 4px; }
+.archetype-food .sf-products { max-width: 1120px; margin-inline: auto; }
+.archetype-food .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 36px; }
+.archetype-food .sf-product { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 0 16px; padding: 12px 0; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--sf-ink) 16%, transparent); border-radius: 0; background: transparent; }
+.archetype-food .sf-product-image { grid-row: span 2; aspect-ratio: 1; height: auto; border-radius: 50%; }
+.archetype-food .sf-product-detail { padding: 0; }
+.archetype-food .sf-stock { padding: 4px 0; }
+.archetype-food .sf-add { grid-column: 2; margin: 0; }
+
+/* Artisan puts material and maker stories beside a deliberately edited range. */
+.archetype-artisan { --sf-font-display: Georgia, "Times New Roman", serif; }
+.archetype-artisan .sf-hero { grid-template-columns: .8fr 1.2fr; }
+.archetype-artisan .sf-copy h1 { font-size: clamp(52px, 6vw, 78px); font-weight: 400; }
+.archetype-artisan .sf-visual { min-height: 510px; border-radius: 3px 72px 3px 3px; }
+.archetype-artisan .sf-story { border: 0; }
+.archetype-artisan .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; }
+.archetype-artisan .sf-product { border-radius: 2px; }
+.archetype-artisan .sf-product-image { aspect-ratio: 1 / 1.08; height: auto; }
+
+/* Luxury leaves deliberate space around a small, gallery-like assortment. */
+.archetype-luxury { --sf-font-display: Georgia, "Times New Roman", serif; }
+.archetype-luxury .sf-hero { grid-template-columns: .78fr 1.22fr; gap: clamp(48px, 10vw, 150px); padding-block: clamp(86px, 11vw, 150px); }
+.archetype-luxury .sf-copy h1 { font-size: clamp(48px, 5.5vw, 72px); font-weight: 400; line-height: 1.08; }
+.archetype-luxury .sf-visual { min-height: 540px; border-radius: 0; box-shadow: none; }
+.archetype-luxury .sf-products { max-width: 1120px; margin-inline: auto; }
+.archetype-luxury .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 54px; }
+.archetype-luxury .sf-product { border: 0; border-radius: 0; background: transparent; }
+.archetype-luxury .sf-product-image { aspect-ratio: 1 / 1.08; height: auto; }
+
+/* Local commerce starts with place, then makes the next action obvious. */
+.archetype-local .sf-hero { grid-template-columns: 1fr 1fr; padding-block: 56px; }
+.archetype-local .sf-copy { padding: clamp(20px, 4vw, 54px); border-left: 4px solid var(--sf-accent); }
+.archetype-local .sf-visual { min-height: 420px; border-radius: 10px 48px 10px 10px; }
+.archetype-local .sf-story { max-width: 980px; margin-inline: 0 auto; }
+.archetype-local .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.archetype-local .sf-product-image { aspect-ratio: 1 / 1; height: auto; }
+
+/* B2B uses catalogue rails and high-density, scan-friendly product data. */
+.archetype-b2b .sf-hero { grid-template-columns: 1.05fr .95fr; padding-block: 42px; }
+.archetype-b2b .sf-copy h1 { font-size: clamp(42px, 5vw, 64px); letter-spacing: -.04em; }
+.archetype-b2b .sf-visual { min-height: 360px; border-radius: 4px; }
+.archetype-b2b .sf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.archetype-b2b .sf-product { border-radius: 3px; }
+.archetype-b2b .sf-product-image { aspect-ratio: 1 / .9; height: auto; }
+.archetype-b2b .sf-product-detail { padding: 10px 10px 5px; }
+.archetype-b2b .sf-add { margin-inline: 10px; }
+
+/* Subscription makes the product and its recurring cadence equally legible. */
+.archetype-subscription .sf-hero { grid-template-columns: .9fr 1.1fr; }
+.archetype-subscription .sf-copy h1 { font-size: clamp(48px, 6vw, 76px); }
+.archetype-subscription .sf-visual { min-height: 460px; border-radius: 28px; }
+.archetype-subscription .sf-story { max-width: 900px; padding-block: 34px 52px; text-align: center; }
+.archetype-subscription .sf-story p { margin-inline: auto; }
+.archetype-subscription .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.archetype-subscription .sf-product { border-radius: 16px; }
+.archetype-subscription .sf-product-image { aspect-ratio: 1 / 1; height: auto; border-radius: 14px 14px 0 0; }
+
+/* Services foreground expertise, then keeps inquiry paths calm and direct. */
+.archetype-services { --sf-font-display: Georgia, "Times New Roman", serif; }
+.archetype-services .sf-hero { grid-template-columns: 1.08fr .92fr; }
+.archetype-services .sf-copy { max-width: 680px; }
+.archetype-services .sf-copy h1 { font-size: clamp(48px, 6vw, 76px); font-weight: 400; }
+.archetype-services .sf-visual { min-height: 430px; border-radius: 4px 110px 4px 4px; }
+.archetype-services .sf-products { max-width: 1000px; }
+.archetype-services .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.archetype-services .sf-product { border-radius: 4px; }
+.archetype-services .sf-product-image { aspect-ratio: 1 / .82; height: auto; }
+
+/* Marketplace puts search and broad assortment ahead of campaign storytelling. */
+.archetype-marketplace .sf-hero { grid-template-columns: .85fr 1.15fr; padding-block: 44px; }
+.archetype-marketplace .sf-copy h1 { font-size: clamp(46px, 5.5vw, 72px); }
+.archetype-marketplace .sf-visual { min-height: 400px; border-radius: 12px; }
+.archetype-marketplace .sf-products { padding-top: 30px; }
+.archetype-marketplace .sf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.archetype-marketplace .sf-product { border-radius: 6px; }
+.archetype-marketplace .sf-product-image { aspect-ratio: 1 / .94; height: auto; }
+
+/* Attribute-driven motion identity; ambient movement stays decorative only. */
+[data-motion="editorial-reveal"] .sf-product { transition-duration: 560ms; }
+[data-motion="slow-breath"] .sf-visual { animation: sf-beauty-breathe 7s ease-in-out infinite alternate; }
+[data-motion="precise-snap"] .sf-product { transition-duration: 180ms; }
+[data-motion="settled-drift"] .sf-visual > img { transform-origin: 58% 52%; }
+[data-motion="quick-feedback"] .sf-product { transition-duration: 160ms; }
+[data-motion="warm-steam"] .sf-visual:before { animation: sf-food-steam 5.5s ease-in-out infinite; }
+[data-motion="handmade-settle"] .sf-product { transition-duration: 620ms; }
+[data-motion="near-still"] .sf-product { transition-duration: 840ms; }
+[data-motion="friendly-nudge"] .sf-cta:hover { transform: translateY(-2px) rotate(-.4deg); }
+[data-motion="utility-state"] .sf-product { transition-duration: 200ms; }
+[data-motion="measured-cycle"] .sf-visual:after { animation: sf-subscription-orbit 22s linear infinite; }
+[data-motion="confident-focus"] .sf-product { transition-duration: 380ms; }
+[data-motion="discovery-glide"] .sf-product { transition-duration: 460ms; }
+
+@media (max-width: 1050px) {
+  .archetype-grocery .sf-grid,
+  .archetype-b2b .sf-grid,
+  .archetype-marketplace .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .storefront .sf-hero,
+  .archetype-fashion .sf-hero,
+  .archetype-beauty .sf-hero,
+  .archetype-electronics .sf-hero,
+  .archetype-home .sf-hero,
+  .archetype-grocery .sf-hero,
+  .archetype-food .sf-hero,
+  .archetype-artisan .sf-hero,
+  .archetype-luxury .sf-hero,
+  .archetype-local .sf-hero,
+  .archetype-b2b .sf-hero,
+  .archetype-subscription .sf-hero,
+  .archetype-services .sf-hero,
+  .archetype-marketplace .sf-hero { grid-template-columns: 1fr; gap: 26px; }
+  .storefront .sf-copy h1 { font-size: clamp(40px, 11vw, 64px); }
+  .storefront .sf-visual,
+  .archetype-fashion .sf-visual,
+  .archetype-home .sf-visual,
+  .archetype-artisan .sf-visual,
+  .archetype-luxury .sf-visual { min-height: 360px; height: min(112vw, 480px); }
+  .archetype-fashion .sf-product:nth-child(3n + 2) { margin-top: 0; }
+  .archetype-essential .sf-grid,
+  .archetype-fashion .sf-grid,
+  .archetype-beauty .sf-grid,
+  .archetype-electronics .sf-grid,
+  .archetype-home .sf-grid,
+  .archetype-grocery .sf-grid,
+  .archetype-food .sf-grid,
+  .archetype-artisan .sf-grid,
+  .archetype-luxury .sf-grid,
+  .archetype-local .sf-grid,
+  .archetype-b2b .sf-grid,
+  .archetype-subscription .sf-grid,
+  .archetype-services .sf-grid,
+  .archetype-marketplace .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .archetype-food .sf-product { grid-template-columns: 80px minmax(0, 1fr); gap: 0 10px; }
+  .archetype-luxury .sf-grid { gap: 24px 14px; }
+  .archetype-grocery .sf-product-detail,
+  .archetype-b2b .sf-product-detail { padding-inline: 9px; }
+  .storefront-site .storefront-navigation nav { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .storefront *,
+  .storefront *::before,
+  .storefront *::after,
+  .storefront-site *,
+  .storefront-site *::before,
+  .storefront-site *::after,
+  .store-pages-preview,
+  .store-pages-preview *,
+  .store-pages-preview *::before,
+  .store-pages-preview *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
 @media (max-width: 480px) {
   .sf-nav {
     height: 62px;
@@ -4617,3 +4869,148 @@ body::before {
     border-color: var(--line);
   }
 }
+
+/* Keep profile structure ahead of later shared storefront component rules. */
+.storefront[data-rhythm="centered-balance"] .sf-hero,
+.storefront-site[data-rhythm="centered-balance"] .sf-hero { grid-template-columns: 1fr .92fr; }
+.storefront[data-rhythm="asymmetric-editorial"] .sf-hero,
+.storefront-site[data-rhythm="asymmetric-editorial"] .sf-hero { grid-template-columns: .76fr 1.24fr; }
+.storefront[data-rhythm="ritual-steps"] .sf-hero,
+.storefront-site[data-rhythm="ritual-steps"] .sf-hero { grid-template-columns: .88fr 1.12fr; }
+.storefront[data-rhythm="precision-rails"] .sf-hero,
+.storefront-site[data-rhythm="precision-rails"] .sf-hero { grid-template-columns: 1fr 1fr; }
+.storefront[data-rhythm="room-to-object"] .sf-hero,
+.storefront-site[data-rhythm="room-to-object"] .sf-hero { grid-template-columns: .78fr 1.22fr; }
+.storefront[data-rhythm="quick-pick-lanes"] .sf-hero,
+.storefront-site[data-rhythm="quick-pick-lanes"] .sf-hero { grid-template-columns: .92fr 1.08fr; }
+.storefront[data-rhythm="menu-sections"] .sf-hero,
+.storefront-site[data-rhythm="menu-sections"] .sf-hero { grid-template-columns: .9fr 1.1fr; }
+.storefront[data-rhythm="maker-story-pairing"] .sf-hero,
+.storefront-site[data-rhythm="maker-story-pairing"] .sf-hero { grid-template-columns: .8fr 1.2fr; }
+.storefront[data-rhythm="gallery-pause"] .sf-hero,
+.storefront-site[data-rhythm="gallery-pause"] .sf-hero { grid-template-columns: .78fr 1.22fr; }
+.storefront[data-rhythm="place-first-board"] .sf-hero,
+.storefront-site[data-rhythm="place-first-board"] .sf-hero { grid-template-columns: 1fr 1fr; }
+.storefront[data-rhythm="specification-table"] .sf-hero,
+.storefront-site[data-rhythm="specification-table"] .sf-hero { grid-template-columns: 1.05fr .95fr; }
+.storefront[data-rhythm="cadence-cycle"] .sf-hero,
+.storefront-site[data-rhythm="cadence-cycle"] .sf-hero { grid-template-columns: .9fr 1.1fr; }
+.storefront[data-rhythm="expertise-to-inquiry"] .sf-hero,
+.storefront-site[data-rhythm="expertise-to-inquiry"] .sf-hero { grid-template-columns: 1.08fr .92fr; }
+.storefront[data-rhythm="search-first-discovery"] .sf-hero,
+.storefront-site[data-rhythm="search-first-discovery"] .sf-hero { grid-template-columns: .85fr 1.15fr; }
+.storefront[data-rhythm="menu-sections"] .sf-grid,
+.storefront-site[data-rhythm="menu-sections"] .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.storefront[data-rhythm="gallery-pause"] .sf-grid,
+.storefront-site[data-rhythm="gallery-pause"] .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 54px; }
+.storefront[data-density="high-turnover"] .sf-grid,
+.storefront-site[data-density="high-turnover"] .sf-grid,
+.storefront[data-density="procurement-dense"] .sf-grid,
+.storefront-site[data-density="procurement-dense"] .sf-grid,
+.storefront[data-density="broad-assortment"] .sf-grid,
+.storefront-site[data-density="broad-assortment"] .sf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.storefront[data-density="steady-grid"] .sf-grid,
+.storefront-site[data-density="steady-grid"] .sf-grid,
+.storefront[data-density="routine-pairing"] .sf-grid,
+.storefront-site[data-density="routine-pairing"] .sf-grid,
+.storefront[data-density="spacious-furnishing"] .sf-grid,
+.storefront-site[data-density="spacious-furnishing"] .sf-grid,
+.storefront[data-density="curated-makers"] .sf-grid,
+.storefront-site[data-density="curated-makers"] .sf-grid,
+.storefront[data-density="neighbourhood-mix"] .sf-grid,
+.storefront-site[data-density="neighbourhood-mix"] .sf-grid,
+.storefront[data-density="plan-and-product"] .sf-grid,
+.storefront-site[data-density="plan-and-product"] .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.storefront[data-density="runway-edit"] .sf-product-image,
+.storefront-site[data-density="runway-edit"] .sf-product-image { aspect-ratio: 4 / 5; height: auto; }
+.storefront[data-density="compact-packshot"] .sf-product-image,
+.storefront-site[data-density="compact-packshot"] .sf-product-image,
+.storefront[data-density="mixed-assortment"] .sf-product-image,
+.storefront-site[data-density="mixed-assortment"] .sf-product-image { aspect-ratio: 1 / .94; height: auto; }
+.storefront[data-imagery="full-bleed-stilllife"] .sf-visual,
+.storefront-site[data-imagery="full-bleed-stilllife"] .sf-visual { box-shadow: none; border-radius: 0; }
+.storefront[data-imagery="material-texture"] .sf-product-image,
+.storefront-site[data-imagery="material-texture"] .sf-product-image { background-color: color-mix(in srgb, var(--sf-wash) 74%, #d9cbb5); }
+.storefront[data-typography="editorial-serif"] .sf-copy h1,
+.storefront-site[data-typography="editorial-serif"] .sf-copy h1,
+.storefront[data-typography="menu-serif"] .sf-copy h1,
+.storefront-site[data-typography="menu-serif"] .sf-copy h1,
+.storefront[data-typography="quiet-display"] .sf-copy h1,
+.storefront-site[data-typography="quiet-display"] .sf-copy h1,
+.storefront[data-typography="crafted-serif"] .sf-copy h1,
+.storefront-site[data-typography="crafted-serif"] .sf-copy h1,
+.storefront[data-typography="expert-editorial"] .sf-copy h1,
+.storefront-site[data-typography="expert-editorial"] .sf-copy h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
+@media (max-width: 1050px) {
+  .storefront[data-density="high-turnover"] .sf-grid,
+  .storefront-site[data-density="high-turnover"] .sf-grid,
+  .storefront[data-density="procurement-dense"] .sf-grid,
+  .storefront-site[data-density="procurement-dense"] .sf-grid,
+  .storefront[data-density="broad-assortment"] .sf-grid,
+  .storefront-site[data-density="broad-assortment"] .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .storefront[data-rhythm] .sf-hero,
+  .storefront-site[data-rhythm] .sf-hero { grid-template-columns: 1fr; }
+  .storefront[data-density] .sf-grid,
+  .storefront-site[data-density] .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .storefront-site .storefront-navigation nav { display: flex; }
+}
+
+.storefront[data-typography="balanced-grotesk"] .sf-copy h1,
+.storefront-site[data-typography="balanced-grotesk"] .sf-copy h1,
+.storefront[data-typography="technical-sans"] .sf-copy h1,
+.storefront-site[data-typography="technical-sans"] .sf-copy h1,
+.storefront[data-typography="industrial-sans"] .sf-copy h1,
+.storefront-site[data-typography="industrial-sans"] .sf-copy h1,
+.storefront[data-typography="discovery-grotesk"] .sf-copy h1,
+.storefront-site[data-typography="discovery-grotesk"] .sf-copy h1 { font-family: "Manrope Variable", Manrope, sans-serif; }
+.storefront[data-typography="soft-humanist"] .sf-copy h1,
+.storefront-site[data-typography="soft-humanist"] .sf-copy h1,
+.storefront[data-typography="friendly-rounded"] .sf-copy h1,
+.storefront-site[data-typography="friendly-rounded"] .sf-copy h1,
+.storefront[data-typography="compact-grotesk"] .sf-copy h1,
+.storefront-site[data-typography="compact-grotesk"] .sf-copy h1 { font-family: "DM Sans Variable", "DM Sans", sans-serif; }
+.storefront[data-typography="regularity-humanist"] .sf-copy h1,
+.storefront-site[data-typography="regularity-humanist"] .sf-copy h1 { font-family: "DM Sans Variable", sans-serif; font-weight: 500; }
+.storefront[data-typography="warm-transitional"] .sf-copy h1,
+.storefront-site[data-typography="warm-transitional"] .sf-copy h1,
+.storefront[data-typography="editorial-serif"] .sf-copy h1,
+.storefront-site[data-typography="editorial-serif"] .sf-copy h1,
+.storefront[data-typography="menu-serif"] .sf-copy h1,
+.storefront-site[data-typography="menu-serif"] .sf-copy h1,
+.storefront[data-typography="crafted-serif"] .sf-copy h1,
+.storefront-site[data-typography="crafted-serif"] .sf-copy h1,
+.storefront[data-typography="quiet-display"] .sf-copy h1,
+.storefront-site[data-typography="quiet-display"] .sf-copy h1,
+.storefront[data-typography="expert-editorial"] .sf-copy h1,
+.storefront-site[data-typography="expert-editorial"] .sf-copy h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
+.storefront[data-typography="warm-transitional"] .sf-copy h1,
+.storefront-site[data-typography="warm-transitional"] .sf-copy h1 { letter-spacing: -.035em; }
+.storefront[data-typography="quiet-display"] .sf-copy h1,
+.storefront-site[data-typography="quiet-display"] .sf-copy h1 { letter-spacing: -.025em; }
+.storefront[data-typography="industrial-sans"] .sf-copy h1,
+.storefront-site[data-typography="industrial-sans"] .sf-copy h1 { letter-spacing: -.045em; font-weight: 650; }
+.storefront[data-typography="menu-serif"] .sf-copy h1,
+.storefront-site[data-typography="menu-serif"] .sf-copy h1 { letter-spacing: -.055em; }
+
+/* The editor thumbnail shares the same sector art direction without page-specific copy. */
+.store-pages-preview[data-rhythm="asymmetric-editorial"] .store-pages-preview-image-band { min-height: 170px; }
+.store-pages-preview[data-rhythm="ritual-steps"] .store-pages-preview-image-band { min-height: 148px; border-radius: 44px 44px 0 0; }
+.store-pages-preview[data-rhythm="precision-rails"] .store-pages-preview-image-band { min-height: 118px; }
+.store-pages-preview[data-rhythm="room-to-object"] .store-pages-preview-image-band { min-height: 170px; background-position: center 58%; }
+.store-pages-preview[data-rhythm="quick-pick-lanes"] .store-pages-preview-image-band { min-height: 108px; }
+.store-pages-preview[data-rhythm="menu-sections"] .store-pages-preview-image-band { min-height: 150px; border-radius: 42% 42% 0 0; }
+.store-pages-preview[data-rhythm="maker-story-pairing"] .store-pages-preview-image-band { min-height: 158px; }
+.store-pages-preview[data-rhythm="gallery-pause"] .store-pages-preview-image-band { min-height: 184px; }
+.store-pages-preview[data-rhythm="place-first-board"] .store-pages-preview-image-band { min-height: 136px; background-position: 42% center; }
+.store-pages-preview[data-rhythm="specification-table"] .store-pages-preview-image-band { min-height: 112px; }
+.store-pages-preview[data-rhythm="cadence-cycle"] .store-pages-preview-image-band { min-height: 144px; border-radius: 14px 14px 0 0; }
+.store-pages-preview[data-rhythm="expertise-to-inquiry"] .store-pages-preview-image-band { min-height: 152px; }
+.store-pages-preview[data-rhythm="search-first-discovery"] .store-pages-preview-image-band { min-height: 126px; background-position: center 40%; }
+.store-pages-preview[data-typography="editorial-serif"] .store-pages-preview-title h3,
+.store-pages-preview[data-typography="warm-transitional"] .store-pages-preview-title h3,
+.store-pages-preview[data-typography="menu-serif"] .store-pages-preview-title h3,
+.store-pages-preview[data-typography="crafted-serif"] .store-pages-preview-title h3,
+.store-pages-preview[data-typography="quiet-display"] .store-pages-preview-title h3,
+.store-pages-preview[data-typography="expert-editorial"] .store-pages-preview-title h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }

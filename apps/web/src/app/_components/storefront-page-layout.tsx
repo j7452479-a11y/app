@@ -27,7 +27,14 @@ export function StorefrontPageLayout({
 }) {
   const template = getStorefrontTemplate(templateId);
   return (
-    <main className={`sf-information-page theme-${template.id}`}>
+    <main
+      className={`sf-information-page theme-${template.id} archetype-${template.id}`}
+      data-typography={template.design.typography}
+      data-rhythm={template.design.rhythm}
+      data-density={template.design.density}
+      data-imagery={template.design.imagery}
+      data-motion={template.design.motion.character}
+    >
       <header className="sf-information-heading">
         <p className="sf-information-eyebrow">{storeName}</p>
         <h1>{pageTitles[pageType]}</h1>

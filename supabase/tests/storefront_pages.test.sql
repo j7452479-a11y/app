@@ -102,7 +102,7 @@ select is(
 select is(
   public.product_slug_for(repeat('a', 179) || ' ' || repeat('tail', 100), '71234567-89ab-cdef-0123-456789abcdef'::uuid),
   repeat('a', 179) || '-7123456789abcdef0123456789abcdef',
-  'long generated slugs truncate the readable portion and trim a trailing hyphen'
+  'long generated slugs truncate at a separator, then trim the trailing hyphen'
 );
 select is(
   char_length(public.product_slug_for(repeat('a', 179) || ' ' || repeat('tail', 100), '71234567-89ab-cdef-0123-456789abcdef'::uuid)),

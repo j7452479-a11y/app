@@ -6,9 +6,11 @@
 - Added pgTAP assertions that a safe custom slug is preserved and explicit slash-containing and uppercase/space-containing slugs are rejected.
 - Updated the Task 1 and Task 2 briefs to specify the readable normalized name plus the complete lowercase alphanumeric UUID, documenting collision resistance for shared UUID prefixes and slug stability across product-name changes.
 - Bounded the normalized readable name to 180 characters in both `createProductSlug` and `public.product_slug_for`, trimming a hyphen at the cut before applying the `product` fallback and appending the complete lowercase UUID. Added Vitest and pgTAP regression coverage for a long name whose truncation boundary lands on a hyphen, including URL-format and database-length assertions. Updated both briefs with the name-part bound.
+- Made the SQL operation order explicit as `rtrim(left(readable_name, 180), '-')`; the existing `coalesce(nullif(...), 'product')` fallback remains after truncation and trimming. The pgTAP case places a separator at normalized character 180 and expects it removed.
 
 ## Verification and limitations
 
 - Targeted Vitest regression: expected failure observed before implementation; then passed with 5/5 tests. Full web Vitest suite passed with 16/16 tests.
 - `git diff --check`: passed before commit.
 - pgTAP was not run, as requested, and no database was contacted. Database execution of the migration and pgTAP assertions remains unverified.
+- The existing readable-part test and SQL expression were statically reviewed for truncate-then-trim ordering; no other files were changed for this follow-up.

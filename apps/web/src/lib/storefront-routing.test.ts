@@ -16,6 +16,17 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const products: StorefrontCatalogProduct[] = [
   {
+    id: "p0",
+    organization_id: "store-a",
+    slug: "cotton-shirt-p0",
+    status: "published",
+    name: "Cotton Shirt",
+    description: "Another cotton fabric",
+    price_paise: 180000,
+    stock: 2,
+    image_url: null,
+  },
+  {
     id: "p2",
     organization_id: "store-a",
     slug: "linen-shirt-p2",
@@ -87,21 +98,28 @@ describe("storefront product routing and catalogue", () => {
     ).toEqual([]);
   });
 
-  it("sorts deterministically by name or price with stable tie breakers", () => {
+  it("sorts deterministically by name and ascending or descending price", () => {
     expect(
       filterAndSortProducts(products, {
         query: "shirt",
         inStockOnly: false,
         sort: "price-asc",
       }).map((product) => product.id),
-    ).toEqual(["p1", "p2"]);
+    ).toEqual(["p0", "p1", "p2"]);
     expect(
       filterAndSortProducts(products, {
         query: "shirt",
         inStockOnly: false,
         sort: "name",
       }).map((product) => product.id),
-    ).toEqual(["p1", "p2"]);
+    ).toEqual(["p0", "p1", "p2"]);
+    expect(
+      filterAndSortProducts(products, {
+        query: "shirt",
+        inStockOnly: false,
+        sort: "price-desc",
+      }).map((product) => product.id),
+    ).toEqual(["p2", "p0", "p1"]);
   });
 
   it("adds a product from its detail page to the shared ID-and-quantity cart", () => {

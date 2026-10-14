@@ -5,7 +5,7 @@ import {
   findPublishedProduct,
   filterAndSortProducts,
   type StorefrontCatalogProduct,
-} from "@/app/_components/storefront-catalog";
+} from "@/lib/storefront-catalog";
 import { StorefrontCartProvider, useStorefrontCart } from "@/app/_components/storefront-cart";
 import { StorefrontProductDetail } from "@/app/_components/storefront-product-detail";
 

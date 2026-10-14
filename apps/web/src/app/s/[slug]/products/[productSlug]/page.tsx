@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StorefrontProductDetail } from "@/app/_components/storefront-product-detail";
-import {
-  findPublishedProduct,
-  type StorefrontCatalogProduct,
-} from "@/app/_components/storefront-catalog";
+import { findPublishedProduct, type StorefrontCatalogProduct } from "@/lib/storefront-catalog";
 import { createPublicClient } from "@/lib/supabase/public";
 import { resolveStorefrontStock } from "@/lib/storefront-stock";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";

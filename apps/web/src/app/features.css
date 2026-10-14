@@ -1752,6 +1752,99 @@
   color: var(--sf-ink);
   font-size: 12px;
 }
+.sf-information-page {
+  width: min(100% - 40px, 920px);
+  margin: 0 auto;
+  padding: clamp(42px, 7vw, 88px) 0 clamp(64px, 9vw, 112px);
+  color: var(--sf-ink, #19241f);
+}
+.sf-information-heading {
+  max-width: 720px;
+  margin: 0 auto clamp(28px, 5vw, 54px);
+  text-align: center;
+}
+.sf-information-eyebrow {
+  margin-bottom: 12px;
+  color: var(--sf-accent, #27664b);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.sf-information-heading h1 {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1.08;
+}
+.sf-information-content {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.sf-information-content p {
+  white-space: pre-line;
+}
+.sf-information-story h2,
+.sf-information-faq h2,
+.sf-information-policy h2 {
+  margin-bottom: 8px;
+  font-size: clamp(19px, 2.8vw, 24px);
+  line-height: 1.3;
+}
+.sf-information-story img {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  margin-top: 28px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.sf-information-faq,
+.sf-information-policy {
+  display: grid;
+  gap: 24px;
+}
+.sf-information-faq section,
+.sf-information-policy section {
+  padding-bottom: 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--sf-ink, #19241f) 16%, transparent);
+}
+.sf-information-faq section:last-child,
+.sf-information-policy section:last-child {
+  border-bottom: 0;
+}
+.sf-information-contact {
+  margin: 0;
+  display: grid;
+  gap: 0;
+}
+.sf-information-contact > div {
+  display: grid;
+  grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr);
+  gap: 20px;
+  padding: 17px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--sf-ink, #19241f) 16%, transparent);
+}
+.sf-information-contact dt {
+  font-weight: 700;
+}
+.sf-information-contact dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.sf-information-contact dd p {
+  margin: 0;
+}
+.sf-information-contact a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sf-information-content :is(a, button):focus-visible {
+  outline: 3px solid var(--sf-accent, #27664b);
+  outline-offset: 4px;
+}
 @media (max-width: 760px) {
   .storefront-navigation {
     display: grid;
@@ -1779,6 +1872,16 @@
   }
   .storefront-footer nav {
     justify-content: flex-start;
+  }
+  .sf-information-page {
+    width: min(100% - 36px, 920px);
+  }
+  .sf-information-content {
+    font-size: 15px;
+  }
+  .sf-information-contact > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

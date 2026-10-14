@@ -32,12 +32,12 @@ export async function getPublishedStorePage(
       .maybeSingle(),
     client
       .from("store_pages")
-      .select("published_content")
+      .select("published_content,published_at")
       .eq("organization_id", organization.id)
       .eq("page_type", pageType)
       .maybeSingle(),
   ]);
-  if (!store || !page?.published_content) return null;
+  if (!store || !page?.published_content || !page.published_at) return null;
 
   const parsed = parseStorePageContent(pageType, page.published_content);
   if (!parsed.success) return null;

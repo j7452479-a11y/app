@@ -16,11 +16,13 @@ function makeClient({
   organization = { id: "org-1" },
   store = { display_name: "North Shop", template: "local" },
   publishedContent,
+  publishedAt = "2026-10-15T00:00:00.000Z",
 }: {
   available?: boolean;
   organization?: { id: string } | null;
   store?: { display_name: string; template: string } | null;
   publishedContent?: Record<string, unknown> | null;
+  publishedAt?: string | null;
 } = {}) {
   const selects: string[] = [];
   const client = {
@@ -42,7 +44,7 @@ function makeClient({
           if (table === "store_pages") {
             return {
               data: filters.organization_id === "org-1" && filters.page_type
-                ? { published_content: publishedContent ?? null }
+                ? { published_content: publishedContent ?? null, published_at: publishedAt }
                 : null,
             };
           }
@@ -88,9 +90,18 @@ describe("public storefront information pages", () => {
     expect(client.rpc).toHaveBeenCalledWith("is_storefront_available", {
       store_slug: "north-shop",
     });
-    expect(selects).toContain("store_pages:published_content");
+    expect(selects).toContain("store_pages:published_content,published_at");
     expect(selects).not.toContain("store_pages:content");
-    expect(selects.some((selection) => selection.startsWith("store_pages:") && selection !== "store_pages:published_content")).toBe(false);
+    expect(selects.some((selection) => selection.startsWith("store_pages:") && selection !== "store_pages:published_content,published_at")).toBe(false);
+
+    const view = renderPage({
+      pageType: "about",
+      content: result!.content,
+      storeName: result!.store.display_name,
+      templateId: result!.store.template,
+    });
+    expect(view.host.textContent).toContain("Details supplied by this merchant.");
+    view.cleanup();
   });
 
   it.each([
@@ -99,6 +110,7 @@ describe("public storefront information pages", () => {
     ["missing store", { store: null, publishedContent: { story: "Published text." } }],
     ["missing page", {}],
     ["unpublished page", { publishedContent: null }],
+    ["unpublished page with retained snapshot", { publishedContent: { story: "Previously published text." }, publishedAt: null }],
     ["invalid published content", { publishedContent: { story: "<script>draft()</script>" } }],
   ])("does not return a page for %s", async (_label, options) => {
     const { client } = makeClient(options);

@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import React from "react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import {
-  StorefrontShell,
-} from "@/app/_components/storefront-shell";
+import { StorefrontShell } from "@/app/_components/storefront-shell";
 import type { StorefrontPageLink } from "@/app/_components/storefront-navigation";
-import type { StorefrontCartProduct } from "@/app/_components/storefront-cart";
+import {
+  resolveStorefrontStock,
+  type StorefrontCartProduct,
+} from "@/app/_components/storefront-cart";
 import { createPublicClient } from "@/lib/supabase/public";
 
 type Props = { children: ReactNode; params: Promise<{ slug: string }> };
@@ -73,8 +74,10 @@ export default async function StoreLayout({ children, params }: Props) {
     .map((page) => ({ pageType: page.page_type })) as StorefrontPageLink[];
   const catalog: StorefrontCartProduct[] = (products ?? []).map((product) => ({
     ...product,
-    stock:
-      exactStockById.get(product.id) ?? (product.is_in_stock ? 20 : 0),
+    stock: resolveStorefrontStock(
+      product.is_in_stock,
+      exactStockById.get(product.id),
+    ),
   }));
 
   return (

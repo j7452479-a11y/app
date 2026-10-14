@@ -1,6 +1,10 @@
 import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/s/north-shop",
+}));
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -8,9 +12,10 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 import {
   StorefrontCartProvider,
+  resolveStorefrontStock,
   useStorefrontCart,
-  type StorefrontCartItem,
 } from "./storefront-cart";
+import { StorefrontShell } from "./storefront-shell";
 
 const catalog = [
   { id: "available", name: "Available", price_paise: 1250, stock: 8 },
@@ -51,6 +56,58 @@ afterEach(() => {
 });
 
 describe("StorefrontCartProvider", () => {
+  it("does not expose the previous cart during a synchronous store switch", () => {
+    const observed: { productId: string; quantity: number }[][] = [];
+    let currentCart: ReturnType<typeof useStorefrontCart>;
+    function Capture() {
+      currentCart = useStorefrontCart();
+      observed.push(currentCart.items.map((item) => ({ ...item })));
+      return null;
+    }
+
+    host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    const renderStore = (slug: string) =>
+      root?.render(
+        createElement(StorefrontShell, {
+          slug,
+          name: slug,
+          template: "essential",
+          publishedPages: [],
+          plan: "basic",
+          products: catalog,
+          children: createElement(Capture),
+        }),
+      );
+
+    act(() => renderStore("north-shop"));
+    act(() => currentCart!.addItem("available", 3));
+    expect(currentCart!.items).toEqual([
+      { productId: "available", quantity: 3 },
+    ]);
+    window.localStorage.setItem(
+      "storefront-cart:south-shop",
+      JSON.stringify([{ productId: "available", quantity: 2 }]),
+    );
+
+    const switchStart = observed.length;
+    act(() => renderStore("south-shop"));
+    const duringSwitch = observed.slice(switchStart);
+    expect(duringSwitch[0]).toEqual([]);
+    expect(currentCart!.items).toEqual([
+      { productId: "available", quantity: 2 },
+    ]);
+  });
+
+  it("uses exact server stock when available and a conservative fallback otherwise", () => {
+    expect(resolveStorefrontStock(true)).toBe(1);
+    expect(resolveStorefrontStock(false)).toBe(0);
+    expect(resolveStorefrontStock(true, 7)).toBe(7);
+    expect(resolveStorefrontStock(true, 0)).toBe(0);
+    expect(resolveStorefrontStock(true, Number.NaN)).toBe(1);
+  });
+
   it("adds, updates, removes, and clears items", () => {
     const cart = mount("north-shop");
     act(() => cart().addItem("available", 2));

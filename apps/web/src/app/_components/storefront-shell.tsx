@@ -28,7 +28,7 @@ export function StorefrontShell({
   children: ReactNode;
 }) {
   return (
-    <StorefrontCartProvider storeSlug={slug} products={products}>
+    <StorefrontCartProvider key={slug} storeSlug={slug} products={products}>
       <div
         className={`storefront theme-${template} archetype-${template} storefront-site`}
       >

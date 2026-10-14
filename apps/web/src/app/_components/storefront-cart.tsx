@@ -34,6 +34,16 @@ type StorefrontCartValue = {
 const StorefrontCartContext = createContext<StorefrontCartValue | null>(null);
 const STORAGE_PREFIX = "storefront-cart:";
 
+export function resolveStorefrontStock(
+  isInStock: boolean,
+  exactStock?: number,
+): number {
+  if (typeof exactStock === "number" && Number.isFinite(exactStock) && exactStock >= 0) {
+    return Math.floor(exactStock);
+  }
+  return isInStock ? 1 : 0;
+}
+
 function clampQuantity(quantity: number, stock: number): number {
   if (!Number.isFinite(quantity) || stock < 1) return 0;
   return Math.max(1, Math.min(20, Math.floor(quantity), Math.floor(stock)));

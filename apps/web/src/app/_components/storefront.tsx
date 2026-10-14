@@ -11,6 +11,7 @@ import Script from "next/script";
 import type { ActionState } from "@/app/actions";
 import { checkoutStorefront, confirmRazorpayPayment } from "@/app/actions";
 import {
+  getStorefrontHeroCopy,
   getStorefrontTemplate,
   resolveStorefrontMotion,
 } from "@/lib/storefront-templates";
@@ -61,6 +62,7 @@ export function Storefront({
   appEnabled: boolean;
 }) {
   const template = getStorefrontTemplate(templateId);
+  const heroCopy = getStorefrontHeroCopy(templateId, description);
   const cart = useStorefrontCart();
   const quantities = Object.fromEntries(
     cart.items.map((item) => [item.productId, item.quantity]),
@@ -290,42 +292,20 @@ export function Storefront({
       )}
       <section className="sf-hero">
         <div className="sf-copy">
-          <p className="sf-eyebrow">{template.eyebrow}</p>
-          <h1>
-            {template.headline.split("\n").map((line) => (
-              <span key={line}>{line}</span>
-            ))}
-          </h1>
-          <p>
-            {description ||
-              template.tone +
-                ". Thoughtfully selected and ready to make your own."}
-          </p>
+          <p className="sf-eyebrow">{heroCopy.sectorLabel}</p>
+          <h1>{name}</h1>
+          {heroCopy.description && <p>{heroCopy.description}</p>}
           <a className="sf-cta" href="#products">
-            {template.collection} <span>↘</span>
+            {heroCopy.actionLabel} <span>↘</span>
           </a>
         </div>
-        <div
-          className="sf-visual"
-          aria-label={`${template.name} storefront artwork`}
-        >
+        <div className="sf-visual" aria-hidden="true">
           <img
             src={template.image}
-            alt={`${template.name} collection`}
+            alt=""
             fetchPriority="high"
           />
-          <div className="sf-visual-caption">
-            <small>{template.name}</small>
-            <span>{name}</span>
-          </div>
         </div>
-      </section>
-
-      <section id="story" className="sf-story">
-        <span className="sf-eyebrow">A note from {name}</span>
-        <p>
-          {description || "Independent by nature. Thoughtful in every detail."}
-        </p>
       </section>
 
       {appEnabled && <InstallStoreApp slug={slug} name={name} />}
@@ -333,7 +313,7 @@ export function Storefront({
       <section id="products" className="sf-products">
         <div className="sf-section-head">
           <div>
-            <p className="sf-eyebrow">{template.collection}</p>
+            <p className="sf-eyebrow">Products</p>
             <h2>
               {template.id === "food"
                 ? "On the menu"

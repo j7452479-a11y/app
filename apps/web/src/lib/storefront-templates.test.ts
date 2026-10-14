@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  getStorefrontHeroCopy,
   resolveStorefrontMotion,
   storefrontTemplates,
 } from "./storefront-templates";
@@ -71,6 +72,49 @@ describe("storefront design profiles", () => {
     expect(copyById.get("artisan")?.eyebrow).toBe("Makers & materials");
     expect(copyById.get("luxury")?.eyebrow).toBe("Luxury goods & design");
   });
+
+  it("keeps live storefront hero copy independent of template marketing copy", () => {
+    const sectorLabels = [
+      "Retail",
+      "Fashion",
+      "Beauty",
+      "Electronics",
+      "Home & furniture",
+      "Grocery",
+      "Food",
+      "Artisan goods",
+      "Luxury goods",
+      "Local business",
+      "Business supplies",
+      "Subscription goods",
+      "Professional services",
+      "Marketplace",
+    ];
+
+    for (const template of storefrontTemplates) {
+      const copy = getStorefrontHeroCopy(
+        template.id,
+        "  Merchant supplied details.  ",
+      );
+
+      expect(copy).toEqual({
+        sectorLabel: sectorLabels[storefrontTemplates.indexOf(template)],
+        description: "Merchant supplied details.",
+        actionLabel: "Browse products",
+      });
+    }
+  });
+
+  it.each(["", "   ", "\n\t"])(
+    "does not create hero description copy when merchant description is blank (%j)",
+    (description) => {
+      for (const template of storefrontTemplates) {
+        expect(
+          getStorefrontHeroCopy(template.id, description).description,
+        ).toBeNull();
+      }
+    },
+  );
 
   it("keeps every product image ratio in the final storefront CSS overrides", () => {
     const css = readFileSync(

@@ -44,6 +44,37 @@ export const storefrontTemplates = [
 
 export type StorefrontTemplateId = (typeof storefrontTemplates)[number]["id"];
 
+const sectorLabels: Record<StorefrontTemplateId, string> = {
+  essential: "Retail",
+  fashion: "Fashion",
+  beauty: "Beauty",
+  electronics: "Electronics",
+  home: "Home & furniture",
+  grocery: "Grocery",
+  food: "Food",
+  artisan: "Artisan goods",
+  luxury: "Luxury goods",
+  local: "Local business",
+  b2b: "Business supplies",
+  subscription: "Subscription goods",
+  services: "Professional services",
+  marketplace: "Marketplace",
+};
+
+export function getStorefrontHeroCopy(
+  templateId: string,
+  description: string,
+) {
+  const template = getStorefrontTemplate(templateId);
+  const merchantDescription = description.trim();
+
+  return {
+    sectorLabel: sectorLabels[template.id],
+    description: merchantDescription || null,
+    actionLabel: "Browse products",
+  };
+}
+
 export function getStorefrontTemplate(id: string) {
   return storefrontTemplates.find((template) => template.id === id) ?? storefrontTemplates[0];
 }

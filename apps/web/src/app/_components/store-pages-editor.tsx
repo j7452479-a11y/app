@@ -62,6 +62,34 @@ function faqItems(draft: Draft): FaqItem[] {
     : [];
 }
 
+function sortJsonKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortJsonKeys);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => [key, sortJsonKeys(item)]),
+    );
+  }
+  return value;
+}
+
+function canonicalPageContent(pageType: StorePageType, content: unknown): string | null {
+  const parsed = parseStorePageContent(pageType, content);
+  if (!parsed.success) return null;
+  const { pageType: _pageType, ...fields } = parsed.data;
+  return JSON.stringify(sortJsonKeys(fields));
+}
+
+export function hasUnsavedStorePageChanges(
+  pageType: StorePageType,
+  draft: unknown,
+  savedContent: Record<string, unknown> | null | undefined,
+): boolean {
+  if (!savedContent) return true;
+  const current = canonicalPageContent(pageType, draft);
+  const saved = canonicalPageContent(pageType, savedContent);
+  return current === null || saved === null || current !== saved;
+}
+
 function initialDrafts(rows: PageRow[]): Record<StorePageType, Draft> {
   const drafts = structuredClone(emptyDraft);
   for (const row of rows) {
@@ -203,6 +231,7 @@ export function StorePagesEditor({
   const [isPending, startTransition] = useTransition();
   const draft = drafts[selectedPage];
   const row = pageRows.find((page) => page.page_type === selectedPage);
+  const hasUnsavedChanges = hasUnsavedStorePageChanges(selectedPage, draft, row?.content);
   const template = getStorefrontTemplate(templateId);
   const readiness = readinessItems(selectedPage, draft);
   const isReady = isStorePageReady(selectedPage, draft);
@@ -221,11 +250,15 @@ export function StorePagesEditor({
       const result = await saveStorePage(formData);
       setFeedback(result);
       if (result.message) {
+        const parsed = parseStorePageContent(selectedPage, draft);
+        const savedContent = parsed.success
+          ? Object.fromEntries(Object.entries(parsed.data).filter(([key]) => key !== "pageType"))
+          : { ...draft };
         setPageRows((current) => {
           const existing = current.find((page) => page.page_type === selectedPage);
           const saved: PageRow = {
             page_type: selectedPage,
-            content: { ...draft },
+            content: savedContent,
             published_content: existing?.published_content ?? null,
             published_at: existing?.published_at ?? null,
           };
@@ -277,6 +310,7 @@ export function StorePagesEditor({
             {fieldErrors._form && <p className="notice error" role="alert">{fieldErrors._form.join(" ")}</p>}
             {feedback.error && <p className="notice error" role="alert">{feedback.error}</p>}
             {feedback.message && <p className="notice" role="status">{feedback.message}</p>}
+            {hasUnsavedChanges && <p className="notice warn" role="status">Save draft before publishing these edits.</p>}
 
             <section className="store-pages-checklist" aria-labelledby="store-pages-checklist-title">
               <div className="store-pages-checklist-head"><div><span className="eyebrow">Before it goes live</span><h3 id="store-pages-checklist-title">Readiness checklist</h3></div><span className={`badge ${isReady ? "" : "warn"}`}>{isReady ? "Ready to publish" : "Needs details"}</span></div>
@@ -286,7 +320,7 @@ export function StorePagesEditor({
 
             <div className="store-pages-actions">
               <button className="button" type="submit" disabled={!canEdit || isPending}>{isPending ? "Saving…" : "Save draft"}</button>
-              <button className="button secondary" type="button" disabled={!canEdit || isPending || !isReady || !row} onClick={() => submitPublication("publish")}>{row?.published_at ? "Publish changes" : "Publish page"}</button>
+              <button className="button secondary" type="button" disabled={!canEdit || isPending || !isReady || hasUnsavedChanges || !row} onClick={() => submitPublication("publish")}>{row?.published_at ? "Publish changes" : "Publish page"}</button>
               {row?.published_at && <button className="button danger small" type="button" disabled={!canEdit || isPending} onClick={() => submitPublication("unpublish")}>Unpublish</button>}
             </div>
           </form>

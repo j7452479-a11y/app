@@ -9,8 +9,10 @@ select has_column('public', 'store_pages', 'page_type', 'store pages have a page
 select has_column('public', 'store_pages', 'content', 'store pages keep editable draft content');
 select has_column('public', 'store_pages', 'published_content', 'store pages keep a separate published snapshot');
 select has_column('public', 'store_pages', 'published_at', 'store pages track publication time');
+select has_column('public', 'store_pages', 'revision', 'store pages carry a concurrency revision');
 select col_not_null('public', 'store_pages', 'content', 'draft content is required');
 select col_not_null('public', 'store_pages', 'organization_id', 'organization is required');
+select col_not_null('public', 'store_pages', 'revision', 'store page revision is required');
 select has_column('public', 'products', 'slug', 'products have a persisted slug');
 select col_not_null('public', 'products', 'slug', 'product slugs are required');
 select has_index('public', 'store_pages', 'store_pages_organization_id_page_type_key', 'one row per organization and page type');
@@ -54,6 +56,25 @@ insert into public.store_pages (organization_id, page_type, content, published_c
   ('10000000-0000-0000-0000-000000000001', 'faq', '{"items":[]}', null, null),
   ('10000000-0000-0000-0000-000000000002', 'about', '{"story":"other tenant draft"}', '{"story":"other tenant live"}', now()),
   ('10000000-0000-0000-0000-000000000003', 'about', '{"story":"unavailable draft"}', '{"story":"unavailable live"}', now());
+
+select is(
+  (select revision from public.store_pages where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about'),
+  1::bigint,
+  'new store pages start at revision one'
+);
+update public.store_pages
+set content = content || '{"revision_test":true}'::jsonb
+where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about';
+select is(
+  (select revision from public.store_pages where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about'),
+  2::bigint,
+  'every store page update increments its database-managed revision'
+);
+select throws_ok(
+  $$insert into public.store_pages (organization_id, page_type, content, revision)
+    values ('10000000-0000-0000-0000-000000000001', 'shipping_returns', '{}'::jsonb, 0)$$,
+  '23514', null, 'store page revisions must be positive'
+);
 
 select throws_ok(
   $$insert into public.store_pages (organization_id, page_type, content)

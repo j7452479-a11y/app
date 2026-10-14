@@ -9,8 +9,27 @@ create table public.store_pages (
   published_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  revision bigint not null default 1 check (revision > 0),
   unique (organization_id, page_type)
 );
+
+create function public.bump_store_page_revision()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  new.revision := old.revision + 1;
+  new.updated_at := clock_timestamp();
+  return new;
+end;
+$$;
+
+revoke all on function public.bump_store_page_revision() from public, anon, authenticated;
+create trigger bump_store_page_revision_before_update
+  before update on public.store_pages
+  for each row execute function public.bump_store_page_revision();
 
 alter table public.store_pages enable row level security;
 revoke all on public.store_pages from anon, authenticated;

@@ -103,7 +103,6 @@ export async function saveStorePage(formData: FormData): Promise<ActionState> {
     organization_id: context.organizationId,
     page_type: draft.pageType,
     content,
-    updated_at: new Date().toISOString(),
   }, { onConflict: "organization_id,page_type" });
   if (error) return { error: "The draft could not be saved. Please retry." };
 
@@ -139,7 +138,7 @@ export async function setStorePagePublished(formData: FormData): Promise<ActionS
 
   const { data: page, error: pageError } = await context.supabase
     .from("store_pages")
-    .select("content,updated_at")
+    .select("content,revision")
     .eq("organization_id", context.organizationId)
     .eq("page_type", pageType)
     .maybeSingle();
@@ -160,10 +159,9 @@ export async function setStorePagePublished(formData: FormData): Promise<ActionS
         Object.entries(parsed.data).filter(([key]) => key !== "pageType"),
       ),
       published_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
   } else {
-    update = { published_at: null, updated_at: new Date().toISOString() };
+    update = { published_at: null };
   }
 
   let updateQuery = context.supabase
@@ -171,7 +169,7 @@ export async function setStorePagePublished(formData: FormData): Promise<ActionS
     .update(update)
     .eq("organization_id", context.organizationId)
     .eq("page_type", pageType);
-  if (action === "publish") updateQuery = updateQuery.eq("updated_at", page.updated_at);
+  if (action === "publish") updateQuery = updateQuery.eq("revision", page.revision);
   const { error: updateError, data: updatedPage } = await updateQuery.select("page_type").maybeSingle();
   if (updateError || !updatedPage) {
     if (action === "publish") {

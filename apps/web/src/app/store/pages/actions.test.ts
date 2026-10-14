@@ -12,6 +12,7 @@ type Page = {
   published_content: Record<string, unknown> | null;
   published_at: string | null;
   updated_at: string;
+  revision: number;
 };
 
 function createDatabase({
@@ -20,12 +21,14 @@ function createDatabase({
   subscriptionState = "active",
   organizations = ["org-one"],
   pages = [] as Page[],
+  bumpRevisionBeforeUpdate = false,
 }: {
   userId?: string | null;
   role?: string;
   subscriptionState?: string;
   organizations?: string[];
   pages?: Page[];
+  bumpRevisionBeforeUpdate?: boolean;
 } = {}) {
   const rows = new Map(pages.map((page) => [`${page.organization_id}:${page.page_type}`, structuredClone(page)]));
   const writes: { table: string; values: Record<string, unknown> }[] = [];
@@ -50,9 +53,14 @@ function createDatabase({
           if (table === "store_pages") {
             if (operation === "update") {
               const key = `${filters.organization_id}:${filters.page_type}`;
-              const current = rows.get(key);
-              if (!current || (filters.updated_at && current.updated_at !== filters.updated_at)) return { data: null };
-              const updated = { ...current, ...values };
+              let current = rows.get(key);
+              if (!current) return { data: null };
+              if (bumpRevisionBeforeUpdate) {
+                current = { ...current, content: { story: "A newer story saved by another tab." }, revision: current.revision + 1 };
+                rows.set(key, current);
+              }
+              if (filters.revision !== undefined && current.revision !== filters.revision) return { data: null };
+              const updated = { ...current, ...values, revision: current.revision + 1 };
               rows.set(key, updated);
               writes.push({ table, values: structuredClone(values) });
               return { data: updated };
@@ -79,7 +87,7 @@ function createDatabase({
           if (operation === "upsert") {
             const key = `${values.organization_id}:${values.page_type}`;
             const current = rows.get(key);
-            rows.set(key, { ...current, ...values } as Page);
+            rows.set(key, { ...current, ...values, revision: current ? current.revision + 1 : 1 } as Page);
           } else if (operation === "update") {
             const key = `${filters.organization_id}:${filters.page_type}`;
             const current = rows.get(key);
@@ -119,6 +127,7 @@ const liveAbout: Page = {
   published_content: { story: "The story currently shown to customers." },
   published_at: "2026-10-01T00:00:00.000Z",
   updated_at: "2026-10-01T00:00:00.000Z",
+  revision: 1,
 };
 
 describe("store page actions", () => {
@@ -186,7 +195,7 @@ describe("store page actions", () => {
     expect(db.rows.get("org-two:about")?.content).toEqual(otherTenant.content);
     expect(db.writes).toEqual([{
       table: "store_pages",
-      values: { organization_id: "org-one", page_type: "about", content: aboutDraft, updated_at: expect.any(String) },
+      values: { organization_id: "org-one", page_type: "about", content: aboutDraft },
     }]);
   });
 
@@ -213,6 +222,22 @@ describe("store page actions", () => {
     expect(db.writes).toEqual([]);
     expect(db.rows.get("org-one:about")?.published_content).toEqual(liveAbout.published_content);
     expect(db.rows.get("org-one:about")?.published_at).toBe(liveAbout.published_at);
+  });
+
+  it("rejects publishing when the database revision changes after the draft read", async () => {
+    const db = createDatabase({ pages: [{ ...liveAbout, content: aboutDraft }], bumpRevisionBeforeUpdate: true });
+    vi.mocked(createClient).mockResolvedValue(db.client as never);
+
+    const result = await setStorePagePublished(publicationForm("about", aboutDraft, "publish"));
+
+    expect(result.errors?._form?.[0]).toMatch(/changed.*refresh|refresh.*review/i);
+    expect(db.rows.get("org-one:about")).toMatchObject({
+      content: { story: "A newer story saved by another tab." },
+      published_content: liveAbout.published_content,
+      published_at: liveAbout.published_at,
+      revision: 2,
+    });
+    expect(db.writes).toEqual([]);
   });
 
   it("publishes persisted content when expected preview content matches canonically", async () => {

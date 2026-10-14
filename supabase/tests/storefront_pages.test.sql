@@ -66,19 +66,51 @@ select throws_ok(
   '23505', null, 'an organization can have only one page of each type'
 );
 
+create temporary table legacy_product_slug_fixture (
+  id uuid primary key,
+  organization_id uuid not null,
+  name text not null,
+  slug text
+);
+insert into legacy_product_slug_fixture (id, organization_id, name) values
+  ('61234567-89ab-cdef-0123-456789abcdef', '10000000-0000-0000-0000-000000000001', 'Linen Shirt'),
+  ('61234567-89ab-cdef-fedc-ba9876543210', '10000000-0000-0000-0000-000000000001', 'Linen Shirt');
+update legacy_product_slug_fixture
+set slug = public.product_slug_for(name, id);
+alter table legacy_product_slug_fixture alter column slug set not null;
+alter table legacy_product_slug_fixture add constraint legacy_product_slug_fixture_org_slug_key unique (organization_id, slug);
+select is(
+  (select count(distinct slug) from legacy_product_slug_fixture),
+  2::bigint,
+  'legacy backfill produces distinct slugs for duplicate names and UUIDs with the same old prefix'
+);
+
 insert into public.products (id, organization_id, name, price_paise, stock, status) values
   ('01234567-89ab-cdef-0123-456789abcdef', '10000000-0000-0000-0000-000000000001', 'Crème Brûlée', 100, 2, 'draft');
 insert into public.products (id, organization_id, name, slug, price_paise) values
   ('31234567-89ab-cdef-0123-456789abcdef', '10000000-0000-0000-0000-000000000001', '!!!', '  ', 100);
 select is(
   (select slug from public.products where id = '01234567-89ab-cdef-0123-456789abcdef'),
-  'creme-brulee-01234567',
+  'creme-brulee-0123456789abcdef0123456789abcdef',
   'generated product slugs match the application normalization and UUID suffix'
 );
 select is(
   (select slug from public.products where id = '31234567-89ab-cdef-0123-456789abcdef'),
-  'product-31234567',
+  'product-3123456789abcdef0123456789abcdef',
   'blank slugs and names without ASCII letters use the product fallback'
+);
+insert into public.products (id, organization_id, name, price_paise) values
+  ('41234567-89ab-cdef-0123-456789abcdef', '10000000-0000-0000-0000-000000000001', 'Linen Shirt', 100),
+  ('41234567-89ab-cdef-fedc-ba9876543210', '10000000-0000-0000-0000-000000000001', 'Linen Shirt', 100);
+select is(
+  (select slug from public.products where id = '41234567-89ab-cdef-0123-456789abcdef'),
+  'linen-shirt-4123456789abcdef0123456789abcdef',
+  'new product slugs retain the full UUID for the first colliding-prefix product'
+);
+select is(
+  (select slug from public.products where id = '41234567-89ab-cdef-fedc-ba9876543210'),
+  'linen-shirt-4123456789abcdeffedcba9876543210',
+  'new product slugs remain unique for duplicate names and colliding eight-character prefixes'
 );
 
 insert into public.products (id, organization_id, name, slug, price_paise)
@@ -94,7 +126,7 @@ update public.products set name = 'Renamed product', slug = 'attempted-reassignm
 where id = '01234567-89ab-cdef-0123-456789abcdef';
 select is(
   (select slug from public.products where id = '01234567-89ab-cdef-0123-456789abcdef'),
-  'creme-brulee-01234567',
+  'creme-brulee-0123456789abcdef0123456789abcdef',
   'renaming a product cannot change its assigned slug'
 );
 

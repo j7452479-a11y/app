@@ -85,7 +85,7 @@ as $$
       ''
     ),
     'product'
-  ) || '-' || left(regexp_replace(lower(product_id::text), '[^a-z0-9]', '', 'g'), 8);
+  ) || '-' || regexp_replace(lower(product_id::text), '[^a-z0-9]', '', 'g');
 $$;
 
 revoke all on function public.product_slug_for(text, uuid) from public, anon, authenticated;

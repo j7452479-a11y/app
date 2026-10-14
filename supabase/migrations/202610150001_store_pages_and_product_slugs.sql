@@ -95,6 +95,12 @@ update public.products
 set slug = public.product_slug_for(name, id);
 
 alter table public.products alter column slug set not null;
+alter table public.products
+  add constraint products_slug_url_safe_check
+  check (
+    char_length(slug) between 1 and 2048
+    and slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+  );
 alter table public.products add constraint products_organization_id_slug_key unique (organization_id, slug);
 
 create function public.assign_product_slug()

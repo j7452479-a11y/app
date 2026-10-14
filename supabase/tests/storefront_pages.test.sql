@@ -117,6 +117,21 @@ insert into public.products (id, organization_id, name, slug, price_paise)
 values ('11234567-89ab-cdef-0123-456789abcdef', '10000000-0000-0000-0000-000000000001', 'First custom slug', 'tenant-local-slug', 100);
 insert into public.products (id, organization_id, name, slug, price_paise)
 values ('21234567-89ab-cdef-0123-456789abcdef', '10000000-0000-0000-0000-000000000002', 'Same slug other tenant', 'tenant-local-slug', 100);
+select is(
+  (select slug from public.products where id = '11234567-89ab-cdef-0123-456789abcdef'),
+  'tenant-local-slug',
+  'safe custom product slugs are preserved'
+);
+select throws_ok(
+  $$insert into public.products (organization_id, name, slug, price_paise)
+    values ('10000000-0000-0000-0000-000000000001', 'Slash slug', 'linen/shirt', 100)$$,
+  '23514', null, 'product slugs cannot contain route separators'
+);
+select throws_ok(
+  $$insert into public.products (organization_id, name, slug, price_paise)
+    values ('10000000-0000-0000-0000-000000000001', 'Unsafe slug', 'Linen Shirt', 100)$$,
+  '23514', null, 'product slugs must use lowercase URL-safe hyphenated segments'
+);
 select throws_ok(
   $$insert into public.products (organization_id, name, slug, price_paise)
     values ('10000000-0000-0000-0000-000000000001', 'Duplicate slug', 'tenant-local-slug', 100)$$,

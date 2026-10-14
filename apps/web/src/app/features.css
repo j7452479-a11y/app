@@ -5014,3 +5014,19 @@ body::before {
 .store-pages-preview[data-typography="crafted-serif"] .store-pages-preview-title h3,
 .store-pages-preview[data-typography="quiet-display"] .store-pages-preview-title h3,
 .store-pages-preview[data-typography="expert-editorial"] .store-pages-preview-title h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
+
+/* Keep each sector's product crop after the shared storefront image rules. */
+.storefront.archetype-essential .sf-product-image { aspect-ratio: 1 / 1.05; height: auto; }
+.storefront.archetype-fashion .sf-product-image { aspect-ratio: 4 / 5; height: auto; }
+.storefront.archetype-beauty .sf-product-image { aspect-ratio: 1 / 1.12; height: auto; }
+.storefront.archetype-electronics .sf-product-image { aspect-ratio: 1 / 1; height: auto; }
+.storefront.archetype-home .sf-product-image { aspect-ratio: 1 / 1.12; height: auto; }
+.storefront.archetype-grocery .sf-product-image { aspect-ratio: 1 / .94; height: auto; }
+.storefront.archetype-food .sf-product-image { aspect-ratio: 1; height: auto; }
+.storefront.archetype-artisan .sf-product-image { aspect-ratio: 1 / 1.08; height: auto; }
+.storefront.archetype-luxury .sf-product-image { aspect-ratio: 1 / 1.08; height: auto; }
+.storefront.archetype-local .sf-product-image { aspect-ratio: 1 / 1; height: auto; }
+.storefront.archetype-b2b .sf-product-image { aspect-ratio: 1 / .9; height: auto; }
+.storefront.archetype-subscription .sf-product-image { aspect-ratio: 1 / 1; height: auto; }
+.storefront.archetype-services .sf-product-image { aspect-ratio: 1 / .82; height: auto; }
+.storefront.archetype-marketplace .sf-product-image { aspect-ratio: 1 / .94; height: auto; }

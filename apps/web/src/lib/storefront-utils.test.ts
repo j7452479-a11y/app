@@ -22,6 +22,18 @@ describe("createProductSlug", () => {
     expect(createProductSlug("Linen Shirt", "01234567-89ab-cdef-fedc-ba9876543210"))
       .toBe("linen-shirt-0123456789abcdeffedcba9876543210");
   });
+
+  it("bounds long readable names and trims a hyphen at the truncation boundary", () => {
+    const slug = createProductSlug(
+      `${"a".repeat(179)} ${"tail".repeat(100)}`,
+      "71234567-89ab-cdef-0123-456789abcdef",
+    );
+
+    expect(slug).toBe(`${"a".repeat(179)}-7123456789abcdef0123456789abcdef`);
+    expect(slug).toHaveLength(212);
+    expect(slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    expect(slug.length).toBeLessThanOrEqual(2048);
+  });
 });
 
 describe("isOrderTrackingEnabled", () => {

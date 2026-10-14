@@ -20,7 +20,7 @@
   - `parseStorePageContent` accepts valid About, Contact, FAQ, and Shipping & Returns payloads.
   - Reject blank required fields, invalid contact URLs, oversized text, malformed FAQ pairs, and unsupported page types.
   - `isStorePageReady` requires page-specific mandatory facts but permits omitted optional contact fields.
-- `createProductSlug` NFKD-normalizes diacritics, converts other punctuation runs to hyphens, falls back to `product`, appends the complete lowercase alphanumeric UUID of the product ID, and returns the same slug for repeated inputs. Using the full UUID guarantees uniqueness even when product IDs share a prefix. Product-name changes must not change an already assigned slug/URL.
+- `createProductSlug` NFKD-normalizes diacritics, converts other punctuation runs to hyphens, caps the readable name portion at 180 characters and trims any trailing hyphen at the cut, falls back to `product`, then appends the complete lowercase alphanumeric UUID of the product ID. Using the full UUID guarantees uniqueness even when product IDs share a prefix. Product-name changes must not change an already assigned slug/URL.
   - `isOrderTrackingEnabled` is false for `basic` and true for `plus`/`pro`.
 - [ ] **Step 2: Run `pnpm --filter @commerce-os/web test -- src/lib/store-pages.test.ts src/lib/storefront-utils.test.ts` and confirm the new tests fail for missing modules/behavior.**
 - [ ] **Step 3: Implement the Zod schemas and pure helpers in `apps/web/src/lib/store-pages.ts` and a focused storefront utility module.**

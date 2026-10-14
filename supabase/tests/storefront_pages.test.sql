@@ -99,6 +99,22 @@ select is(
   'product-3123456789abcdef0123456789abcdef',
   'blank slugs and names without ASCII letters use the product fallback'
 );
+select is(
+  public.product_slug_for(repeat('a', 179) || ' ' || repeat('tail', 100), '71234567-89ab-cdef-0123-456789abcdef'::uuid),
+  repeat('a', 179) || '-7123456789abcdef0123456789abcdef',
+  'long generated slugs truncate the readable portion and trim a trailing hyphen'
+);
+select is(
+  char_length(public.product_slug_for(repeat('a', 179) || ' ' || repeat('tail', 100), '71234567-89ab-cdef-0123-456789abcdef'::uuid)),
+  212,
+  'long generated slugs remain within the database slug length bound'
+);
+select ok(
+  public.product_slug_for(repeat('a', 179) || ' ' || repeat('tail', 100), '71234567-89ab-cdef-0123-456789abcdef'::uuid)
+    ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+    and char_length(public.product_slug_for(repeat('a', 179) || ' ' || repeat('tail', 100), '71234567-89ab-cdef-0123-456789abcdef'::uuid)) <= 2048,
+  'long generated slugs satisfy the URL-safe database constraint'
+);
 insert into public.products (id, organization_id, name, price_paise) values
   ('41234567-89ab-cdef-0123-456789abcdef', '10000000-0000-0000-0000-000000000001', 'Linen Shirt', 100),
   ('41234567-89ab-cdef-fedc-ba9876543210', '10000000-0000-0000-0000-000000000001', 'Linen Shirt', 100);

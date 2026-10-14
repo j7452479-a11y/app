@@ -4,7 +4,9 @@ export function createProductSlug(name: string, productId: string): string {
     .replace(/\p{M}+/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 180)
+    .replace(/-+$/g, "");
   const readableId = productId.toLowerCase().replace(/[^a-z0-9]/g, "");
 
   return `${readableName || "product"}-${readableId}`;

@@ -272,6 +272,7 @@ export function StorePagesEditor({
     const formData = new FormData();
     formData.set("page_type", selectedPage);
     formData.set("action", action);
+    if (action === "publish") formData.set("expected_content", JSON.stringify(draft));
     setFeedback({});
     startTransition(async () => {
       const result = await setStorePagePublished(formData);

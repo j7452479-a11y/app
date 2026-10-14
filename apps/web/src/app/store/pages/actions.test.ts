@@ -11,6 +11,7 @@ type Page = {
   content: Record<string, unknown>;
   published_content: Record<string, unknown> | null;
   published_at: string | null;
+  updated_at: string;
 };
 
 function createDatabase({
@@ -50,7 +51,7 @@ function createDatabase({
             if (operation === "update") {
               const key = `${filters.organization_id}:${filters.page_type}`;
               const current = rows.get(key);
-              if (!current) return { data: null };
+              if (!current || (filters.updated_at && current.updated_at !== filters.updated_at)) return { data: null };
               const updated = { ...current, ...values };
               rows.set(key, updated);
               writes.push({ table, values: structuredClone(values) });
@@ -102,6 +103,14 @@ function pageForm(pageType: string, content: unknown, extra: Record<string, stri
   return form;
 }
 
+function publicationForm(pageType: string, expectedContent: unknown, action: "publish" | "unpublish") {
+  const form = new FormData();
+  form.set("page_type", pageType);
+  form.set("action", action);
+  if (action === "publish") form.set("expected_content", JSON.stringify(expectedContent));
+  return form;
+}
+
 const aboutDraft = { story: "A small studio making useful objects for daily life." };
 const liveAbout: Page = {
   organization_id: "org-one",
@@ -109,6 +118,7 @@ const liveAbout: Page = {
   content: { story: "Earlier draft from this studio." },
   published_content: { story: "The story currently shown to customers." },
   published_at: "2026-10-01T00:00:00.000Z",
+  updated_at: "2026-10-01T00:00:00.000Z",
 };
 
 describe("store page actions", () => {
@@ -119,7 +129,7 @@ describe("store page actions", () => {
     vi.mocked(createClient).mockResolvedValue(db.client as never);
 
     expect(await saveStorePage(pageForm("about", aboutDraft))).toMatchObject({ error: expect.any(String) });
-    expect(await setStorePagePublished(pageForm("about", {}, { action: "publish" }))).toMatchObject({ error: expect.any(String) });
+    expect(await setStorePagePublished(publicationForm("about", aboutDraft, "publish"))).toMatchObject({ error: expect.any(String) });
     expect(db.writes).toEqual([]);
   });
 
@@ -185,18 +195,31 @@ describe("store page actions", () => {
     const db = createDatabase({ pages: [incomplete] });
     vi.mocked(createClient).mockResolvedValue(db.client as never);
 
-    const result = await setStorePagePublished(pageForm("about", {}, { action: "publish" }));
+    const result = await setStorePagePublished(publicationForm("about", incomplete.content, "publish"));
 
     expect(result.errors?.story).toBeDefined();
     expect(db.writes).toEqual([]);
     expect(db.rows.get("org-one:about")?.published_content).toEqual(liveAbout.published_content);
   });
 
-  it("publishes the validated saved draft as the live snapshot", async () => {
+  it("rejects publishing when the persisted draft changed after this tab previewed it", async () => {
+    const latestDraft = { story: "A newly revised studio story with different details." };
+    const db = createDatabase({ pages: [{ ...liveAbout, content: latestDraft }] });
+    vi.mocked(createClient).mockResolvedValue(db.client as never);
+
+    const result = await setStorePagePublished(publicationForm("about", aboutDraft, "publish"));
+
+    expect(result.errors?._form?.[0]).toMatch(/changed.*refresh|refresh.*review/i);
+    expect(db.writes).toEqual([]);
+    expect(db.rows.get("org-one:about")?.published_content).toEqual(liveAbout.published_content);
+    expect(db.rows.get("org-one:about")?.published_at).toBe(liveAbout.published_at);
+  });
+
+  it("publishes persisted content when expected preview content matches canonically", async () => {
     const db = createDatabase({ pages: [{ ...liveAbout, content: aboutDraft }] });
     vi.mocked(createClient).mockResolvedValue(db.client as never);
 
-    const result = await setStorePagePublished(pageForm("about", { story: "Browser supplied content is ignored." }, { action: "publish" }));
+    const result = await setStorePagePublished(publicationForm("about", { story: `  ${aboutDraft.story}  `, headline: "" }, "publish"));
 
     expect(result).toEqual({ message: expect.any(String) });
     expect(db.rows.get("org-one:about")?.published_content).toEqual(aboutDraft);

@@ -76,6 +76,21 @@ function parseDraft(formData: FormData):
   return { ok: true, pageType, content: result.data };
 }
 
+function stableJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableJson);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => [key, stableJson(item)]),
+    );
+  }
+  return value;
+}
+
+function canonicalContent(content: StorePageContent) {
+  const { pageType: _pageType, ...fields } = content;
+  return JSON.stringify(stableJson(fields));
+}
+
 export async function saveStorePage(formData: FormData): Promise<ActionState> {
   const draft = parseDraft(formData);
   if (!draft.ok) return draft.action;
@@ -106,12 +121,25 @@ export async function setStorePagePublished(formData: FormData): Promise<ActionS
     return { error: "Choose whether to publish or unpublish this page." };
   }
 
+  let expectedContent: StorePageContent | undefined;
+  if (action === "publish") {
+    let expectedValue: unknown;
+    try {
+      expectedValue = JSON.parse(formText(formData, "expected_content"));
+    } catch {
+      return { errors: { _form: ["Refresh the editor and review the latest draft before publishing."] } };
+    }
+    const expected = parseStorePageContent(pageType, expectedValue);
+    if (!expected.success) return { errors: expected.errors };
+    expectedContent = expected.data;
+  }
+
   const context = await requireStorePageEditor();
   if ("error" in context) return context.error;
 
   const { data: page, error: pageError } = await context.supabase
     .from("store_pages")
-    .select("content")
+    .select("content,updated_at")
     .eq("organization_id", context.organizationId)
     .eq("page_type", pageType)
     .maybeSingle();
@@ -121,6 +149,9 @@ export async function setStorePagePublished(formData: FormData): Promise<ActionS
   if (action === "publish") {
     const parsed = parseStorePageContent(pageType, page.content);
     if (!parsed.success) return { errors: parsed.errors };
+    if (!expectedContent || canonicalContent(expectedContent) !== canonicalContent(parsed.data)) {
+      return { errors: { _form: ["This draft changed in another tab. Refresh the editor and review the latest content before publishing."] } };
+    }
     if (!isStorePageReady(pageType, page.content)) {
       return { errors: { _form: ["Complete at least one contact method before publishing this page."] } };
     }
@@ -135,14 +166,19 @@ export async function setStorePagePublished(formData: FormData): Promise<ActionS
     update = { published_at: null, updated_at: new Date().toISOString() };
   }
 
-  const { error: updateError, data: updatedPage } = await context.supabase
+  let updateQuery = context.supabase
     .from("store_pages")
     .update(update)
     .eq("organization_id", context.organizationId)
-    .eq("page_type", pageType)
-    .select("page_type")
-    .maybeSingle();
-  if (updateError || !updatedPage) return { error: "The page publication status could not be updated. Please retry." };
+    .eq("page_type", pageType);
+  if (action === "publish") updateQuery = updateQuery.eq("updated_at", page.updated_at);
+  const { error: updateError, data: updatedPage } = await updateQuery.select("page_type").maybeSingle();
+  if (updateError || !updatedPage) {
+    if (action === "publish") {
+      return { errors: { _form: ["This draft changed in another tab. Refresh the editor and review the latest content before publishing."] } };
+    }
+    return { error: "The page publication status could not be updated. Please retry." };
+  }
 
   revalidatePath("/store/pages");
   revalidatePath("/s", "layout");

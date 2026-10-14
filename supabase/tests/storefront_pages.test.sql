@@ -10,6 +10,7 @@ select has_column('public', 'store_pages', 'content', 'store pages keep editable
 select has_column('public', 'store_pages', 'published_content', 'store pages keep a separate published snapshot');
 select has_column('public', 'store_pages', 'published_at', 'store pages track publication time');
 select has_column('public', 'store_pages', 'revision', 'store pages carry a concurrency revision');
+select col_type_is('public', 'store_pages', 'revision', 'uuid', 'store page concurrency tokens are UUIDs');
 select col_not_null('public', 'store_pages', 'content', 'draft content is required');
 select col_not_null('public', 'store_pages', 'organization_id', 'organization is required');
 select col_not_null('public', 'store_pages', 'revision', 'store page revision is required');
@@ -58,22 +59,32 @@ insert into public.store_pages (organization_id, page_type, content, published_c
   ('10000000-0000-0000-0000-000000000003', 'about', '{"story":"unavailable draft"}', '{"story":"unavailable live"}', now());
 
 select is(
-  (select revision from public.store_pages where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about'),
-  1::bigint,
-  'new store pages start at revision one'
+  (select revision is not null from public.store_pages where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about'),
+  true,
+  'new store pages receive a UUID concurrency token'
 );
+insert into public.store_pages (organization_id, page_type, content, revision)
+values (
+  '10000000-0000-0000-0000-000000000001',
+  'contact',
+  '{"email":"contact@example.test"}',
+  '00000000-0000-0000-0000-000000000000'
+);
+select isnt(
+  (select revision from public.store_pages where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'contact'),
+  '00000000-0000-0000-0000-000000000000'::uuid,
+  'the insert trigger overwrites a caller-supplied revision sentinel'
+);
+create temporary table store_page_revision_before_update as
+select revision from public.store_pages
+where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about';
 update public.store_pages
 set content = content || '{"revision_test":true}'::jsonb
 where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about';
-select is(
+select isnt(
   (select revision from public.store_pages where organization_id = '10000000-0000-0000-0000-000000000001' and page_type = 'about'),
-  2::bigint,
-  'every store page update increments its database-managed revision'
-);
-select throws_ok(
-  $$insert into public.store_pages (organization_id, page_type, content, revision)
-    values ('10000000-0000-0000-0000-000000000001', 'shipping_returns', '{}'::jsonb, 0)$$,
-  '23514', null, 'store page revisions must be positive'
+  (select revision from store_page_revision_before_update),
+  'every store page update rotates its database-managed UUID token'
 );
 
 select throws_ok(

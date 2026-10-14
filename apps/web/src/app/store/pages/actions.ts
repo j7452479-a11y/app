@@ -14,6 +14,12 @@ type EditorContext =
   | { supabase: Awaited<ReturnType<typeof createClient>>; organizationId: string }
   | { error: ActionState };
 
+type StorePageRevision = `${string}-${string}-${string}-${string}-${string}`;
+
+function isStorePageRevision(value: unknown): value is StorePageRevision {
+  return typeof value === "string" && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function formText(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
@@ -143,6 +149,9 @@ export async function setStorePagePublished(formData: FormData): Promise<ActionS
     .eq("page_type", pageType)
     .maybeSingle();
   if (pageError || !page) return { error: "Save a draft for this page before changing its publication status." };
+  if (action === "publish" && !isStorePageRevision(page.revision)) {
+    return { errors: { _form: ["Refresh the editor and review the latest draft before publishing."] } };
+  }
 
   let update: Record<string, unknown>;
   if (action === "publish") {

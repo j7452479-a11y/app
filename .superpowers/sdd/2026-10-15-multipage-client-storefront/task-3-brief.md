@@ -13,7 +13,7 @@
 **Interfaces:**
 - `saveStorePage(formData): Promise<ActionState>` validates `page_type` and JSON content with `parseStorePageContent`, resolves the signed-in user's organization server-side, then inserts/updates only that tenant's draft `content`. It must leave existing `published_content` and `published_at` unchanged.
 - `setStorePagePublished(formData): Promise<ActionState>` resolves the tenant/page server-side. Publish parses the previewed draft from the form, compares its canonical form with persisted `content`, then conditionally updates using the row's database-managed `revision`. If either comparison detects a concurrent save, ask the merchant to refresh and review. Publish validates readiness against persisted `content`, copies only that persisted content to `published_content`, and sets `published_at`. Unpublish sets `published_at` null but preserves both content snapshots. Do not accept organization IDs, published JSON, or auth state from the browser; the expected preview is a concurrency check only, never authorization.
-- `store_pages.revision` is a positive `bigint` initialized to `1`; an invoker `BEFORE UPDATE` trigger increments it and updates `updated_at` server-side. Actions must not use client-generated timestamps for optimistic concurrency.
+- `store_pages.revision` is a `uuid not null default gen_random_uuid()` token. An invoker `BEFORE INSERT OR UPDATE` trigger always replaces `NEW.revision` with a fresh database UUID; on update it also sets `updated_at` server-side. Actions compare the exact persisted UUID string for publish concurrency and do not use client-generated timestamps or numeric revisions.
 - `StorePagesEditor` receives page rows, store name, and selected template; renders bounded inputs for the exact page shapes in Task 1; allows choosing About, Contact, FAQ, Shipping & Returns; displays draft/published status and readiness checklist; provides Save draft, Publish/Unpublish, and desktop/mobile template preview.
 
 ## Global constraints
@@ -24,7 +24,7 @@
 - Database access is gated by existing workspace entitlement and owner/admin/manager roles.
 - Do not change checkout, payment, messaging, order tracking, recommendations, or other plan behavior in this task.
 
-- [ ] **Step 1: Write failing tests** for unauthenticated save/publish, invalid content, cross-tenant IDs, incomplete publish, valid draft save, publish-copy semantics, editing a published page without changing its live snapshot, unpublish preserving content, and rejecting a revision change between read and conditional publish.
+- [ ] **Step 1: Write failing tests** for unauthenticated save/publish, invalid content, cross-tenant IDs, incomplete publish, valid draft save, publish-copy semantics, editing a published page without changing its live snapshot, unpublish preserving content, and rejecting a token change between read and conditional publish. pgTAP must verify caller-supplied insert sentinels are overwritten and update tokens rotate.
 - [ ] **Step 2: Run `pnpm --filter @commerce-os/web test -- src/app/store/pages/actions.test.ts` and confirm failure before implementation.**
 - [ ] **Step 3: Implement authenticated tenant-scoped server actions using Task 1 schemas and Task 2's draft/snapshot columns; add database-managed revision CAS and retain RLS as the authorization boundary.**
 - [ ] **Step 4: Implement the dashboard editor with explicit fields, field-level errors, page checklist, desktop/mobile preview styled by the chosen sector template, save draft, publish/unpublish, and no generic filler copy.**

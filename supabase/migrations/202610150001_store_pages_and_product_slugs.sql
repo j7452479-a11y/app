@@ -9,27 +9,29 @@ create table public.store_pages (
   published_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  revision bigint not null default 1 check (revision > 0),
+  revision uuid not null default gen_random_uuid(),
   unique (organization_id, page_type)
 );
 
-create function public.bump_store_page_revision()
+create function public.assign_store_page_revision()
 returns trigger
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 begin
-  new.revision := old.revision + 1;
-  new.updated_at := clock_timestamp();
+  new.revision := pg_catalog.gen_random_uuid();
+  if tg_op = 'UPDATE' then
+    new.updated_at := pg_catalog.clock_timestamp();
+  end if;
   return new;
 end;
 $$;
 
-revoke all on function public.bump_store_page_revision() from public, anon, authenticated;
-create trigger bump_store_page_revision_before_update
-  before update on public.store_pages
-  for each row execute function public.bump_store_page_revision();
+revoke all on function public.assign_store_page_revision() from public, anon, authenticated;
+create trigger assign_store_page_revision_before_write
+  before insert or update on public.store_pages
+  for each row execute function public.assign_store_page_revision();
 
 alter table public.store_pages enable row level security;
 revoke all on public.store_pages from anon, authenticated;

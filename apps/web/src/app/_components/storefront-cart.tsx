@@ -10,15 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import React from "react";
-
-export type StorefrontCartProduct = {
-  id: string;
-  name: string;
-  description?: string;
-  price_paise: number;
-  stock: number;
-  image_url?: string | null;
-};
+import type { StorefrontCartProduct } from "@/lib/storefront-stock";
 
 export type StorefrontCartItem = { productId: string; quantity: number };
 
@@ -33,16 +25,6 @@ type StorefrontCartValue = {
 
 const StorefrontCartContext = createContext<StorefrontCartValue | null>(null);
 const STORAGE_PREFIX = "storefront-cart:";
-
-export function resolveStorefrontStock(
-  isInStock: boolean,
-  exactStock?: number,
-): number {
-  if (typeof exactStock === "number" && Number.isFinite(exactStock) && exactStock >= 0) {
-    return Math.floor(exactStock);
-  }
-  return isInStock ? 1 : 0;
-}
 
 function clampQuantity(quantity: number, stock: number): number {
   if (!Number.isFinite(quantity) || stock < 1) return 0;

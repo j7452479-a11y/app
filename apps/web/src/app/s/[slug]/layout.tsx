@@ -4,11 +4,11 @@ import React from "react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { StorefrontShell } from "@/app/_components/storefront-shell";
 import type { StorefrontPageLink } from "@/app/_components/storefront-navigation";
+import { createPublicClient } from "@/lib/supabase/public";
 import {
   resolveStorefrontStock,
   type StorefrontCartProduct,
-} from "@/app/_components/storefront-cart";
-import { createPublicClient } from "@/lib/supabase/public";
+} from "@/lib/storefront-stock";
 
 type Props = { children: ReactNode; params: Promise<{ slug: string }> };
 

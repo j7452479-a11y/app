@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { isOrderTrackingEnabled } from "@/lib/storefront-utils";
-import {
-  StorefrontCartProvider,
-  type StorefrontCartProduct,
-} from "./storefront-cart";
+import { type StorefrontCartProduct } from "@/lib/storefront-stock";
+import { StorefrontCartProvider } from "./storefront-cart";
 import {
   StorefrontNavigation,
   type StorefrontPageLink,

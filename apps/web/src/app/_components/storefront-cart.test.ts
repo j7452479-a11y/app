@@ -12,10 +12,10 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 import {
   StorefrontCartProvider,
-  resolveStorefrontStock,
   useStorefrontCart,
 } from "./storefront-cart";
 import { StorefrontShell } from "./storefront-shell";
+import { resolveStorefrontStock } from "@/lib/storefront-stock";
 
 const catalog = [
   { id: "available", name: "Available", price_paise: 1250, stock: 8 },

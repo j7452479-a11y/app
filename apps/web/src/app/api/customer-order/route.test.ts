@@ -24,11 +24,13 @@ function setup({
   organizationId = "org-one",
   plan = "plus",
   available = true,
+  throwAt,
 }: {
   matchedOrder?: typeof order | null;
   organizationId?: string | null;
   plan?: string;
   available?: boolean;
+  throwAt?: "orders" | "rpc";
 } = {}) {
   const filters: Record<string, Record<string, unknown>> = {};
   const selections: Record<string, string> = {};
@@ -44,6 +46,7 @@ function setup({
           return query;
         }),
         maybeSingle: vi.fn(async () => {
+          if (table === throwAt) throw new Error("sensitive database detail");
           if (table === "orders") return { data: matchedOrder, error: null };
           if (table === "organizations") {
             return {
@@ -57,7 +60,10 @@ function setup({
       };
       return query;
     }),
-    rpc: vi.fn(async () => ({ data: available, error: null })),
+    rpc: vi.fn(async () => {
+      if (throwAt === "rpc") throw new Error("sensitive RPC detail");
+      return { data: available, error: null };
+    }),
   };
   vi.mocked(createClient).mockReturnValue(client as never);
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://database.example";
@@ -159,5 +165,35 @@ describe("POST /api/customer-order", () => {
     const response = await POST(request({ slug: "sample-store", token }));
 
     expect(response.headers.get("Cache-Control")).toBe("no-store");
+  });
+
+  it.each(["orders", "rpc"] as const)("returns a generic no-store 503 when the %s call throws", async (throwAt) => {
+    setup({ throwAt });
+
+    const response = await POST(request({ slug: "sample-store", token }));
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(body).toEqual({
+      error: "Order tracking is temporarily unavailable.",
+    });
+    expect(JSON.stringify(body)).not.toContain("sensitive");
+  });
+
+  it("returns a generic no-store 503 when service client construction throws", async () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://database.example";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "server-only-secret";
+    vi.mocked(createClient).mockImplementationOnce(() => {
+      throw new Error("sensitive client construction detail");
+    });
+
+    const response = await POST(request({ slug: "sample-store", token }));
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(await response.json()).toEqual({
+      error: "Order tracking is temporarily unavailable.",
+    });
   });
 });

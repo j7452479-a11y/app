@@ -40,55 +40,59 @@ export async function POST(request: Request) {
     return json({ error: "Order tracking is temporarily unavailable." }, 503);
   }
 
-  const admin = createSupabaseClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const tokenHash = createHash("sha256").update(token).digest("hex");
-  const { data: order, error: orderError } = await admin
-    .from("orders")
-    .select("id,organization_id,order_number,state,created_at")
-    .eq("customer_chat_token_hash", tokenHash)
-    .maybeSingle();
-  if (orderError || !order) {
-    return json({ error: "Order tracking is unavailable for this link." }, 404);
-  }
+  try {
+    const admin = createSupabaseClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const { data: order, error: orderError } = await admin
+      .from("orders")
+      .select("id,organization_id,order_number,state,created_at")
+      .eq("customer_chat_token_hash", tokenHash)
+      .maybeSingle();
+    if (orderError || !order) {
+      return json({ error: "Order tracking is unavailable for this link." }, 404);
+    }
 
-  const { data: organization, error: organizationError } = await admin
-    .from("organizations")
-    .select("id")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (organizationError || !organization || organization.id !== order.organization_id) {
-    return json({ error: "Order tracking is unavailable for this link." }, 404);
-  }
+    const { data: organization, error: organizationError } = await admin
+      .from("organizations")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (organizationError || !organization || organization.id !== order.organization_id) {
+      return json({ error: "Order tracking is unavailable for this link." }, 404);
+    }
 
-  const [{ data: available, error: availabilityError }, { data: subscription, error: subscriptionError }] =
-    await Promise.all([
-      admin.rpc("is_storefront_available", { store_slug: slug }),
-      admin
-        .from("subscriptions")
-        .select("plan")
-        .eq("organization_id", order.organization_id)
-        .maybeSingle(),
-    ]);
-  if (
-    availabilityError ||
-    !available ||
-    subscriptionError ||
-    !subscription ||
-    (subscription.plan !== "plus" && subscription.plan !== "pro")
-  ) {
-    return json({ error: "Order tracking is unavailable for this store." }, 404);
-  }
+    const [{ data: available, error: availabilityError }, { data: subscription, error: subscriptionError }] =
+      await Promise.all([
+        admin.rpc("is_storefront_available", { store_slug: slug }),
+        admin
+          .from("subscriptions")
+          .select("plan")
+          .eq("organization_id", order.organization_id)
+          .maybeSingle(),
+      ]);
+    if (
+      availabilityError ||
+      !available ||
+      subscriptionError ||
+      !subscription ||
+      (subscription.plan !== "plus" && subscription.plan !== "pro")
+    ) {
+      return json({ error: "Order tracking is unavailable for this store." }, 404);
+    }
 
-  return json(
-    {
-      order: {
-        order_number: order.order_number,
-        state: order.state,
-        created_at: order.created_at,
+    return json(
+      {
+        order: {
+          order_number: order.order_number,
+          state: order.state,
+          created_at: order.created_at,
+        },
       },
-    },
-    200,
-  );
+      200,
+    );
+  } catch {
+    return json({ error: "Order tracking is temporarily unavailable." }, 503);
+  }
 }

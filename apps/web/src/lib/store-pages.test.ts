@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isStorePageReady,
+  getPublishedStorePageTypes,
   parseStorePageContent,
   type StorePageType,
 } from "@/lib/store-pages";
@@ -74,6 +75,23 @@ describe("parseStorePageContent", () => {
     }
   });
 
+  it("requires merchant-authored meaningful alt text when About media is supplied", () => {
+    expect(parseStorePageContent("about", {
+      ...validContent.about,
+      mediaUrl: "https://example.com/shop.jpg",
+    })).toMatchObject({ success: false, errors: { mediaAlt: expect.any(Array) } });
+    expect(parseStorePageContent("about", {
+      ...validContent.about,
+      mediaUrl: "https://example.com/shop.jpg",
+      mediaAlt: "",
+    })).toMatchObject({ success: false, errors: { mediaAlt: expect.any(Array) } });
+    expect(parseStorePageContent("about", {
+      ...validContent.about,
+      mediaUrl: "https://example.com/shop.jpg",
+      mediaAlt: "Handmade ceramic bowls on a table",
+    })).toMatchObject({ success: true });
+  });
+
   it("rejects oversized text", () => {
     const result = parseStorePageContent("about", { story: "x".repeat(5001) });
 
@@ -108,6 +126,8 @@ describe("isStorePageReady", () => {
   it("requires page-specific mandatory facts while allowing optional contact fields to be omitted", () => {
     expect(isStorePageReady("about", { headline: "Our story" })).toBe(false);
     expect(isStorePageReady("about", validContent.about)).toBe(true);
+    expect(isStorePageReady("about", { ...validContent.about, mediaUrl: "https://example.com/shop.jpg" })).toBe(false);
+    expect(isStorePageReady("about", { ...validContent.about, mediaUrl: "https://example.com/shop.jpg", mediaAlt: "Ceramic bowls on a table" })).toBe(true);
     expect(isStorePageReady("contact", {})).toBe(false);
     expect(isStorePageReady("contact", { serviceArea: "Central region" })).toBe(true);
     expect(isStorePageReady("faq", { items: [] })).toBe(false);
@@ -115,5 +135,16 @@ describe("isStorePageReady", () => {
 
     const { returnContact: _returnContact, ...requiredShippingFields } = validContent.shipping_returns;
     expect(isStorePageReady("shipping_returns", requiredShippingFields)).toBe(true);
+  });
+});
+
+describe("published store page links", () => {
+  it("includes only published snapshots that parse for their page type", () => {
+    expect(getPublishedStorePageTypes([
+      { page_type: "about", published_content: validContent.about, published_at: "2026-10-15" },
+      { page_type: "faq", published_content: { items: [] }, published_at: "2026-10-15" },
+      { page_type: "contact", published_content: validContent.contact, published_at: null },
+      { page_type: "terms", published_content: {}, published_at: "2026-10-15" },
+    ])).toEqual(["about"]);
   });
 });

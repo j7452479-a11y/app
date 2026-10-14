@@ -5,6 +5,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { StorefrontShell } from "@/app/_components/storefront-shell";
 import type { StorefrontPageLink } from "@/app/_components/storefront-navigation";
 import { createPublicClient } from "@/lib/supabase/public";
+import { getPublishedStorePageTypes } from "@/lib/store-pages";
 import {
   resolveStorefrontStock,
   type StorefrontCartProduct,
@@ -69,9 +70,9 @@ export default async function StoreLayout({ children, params }: Props) {
     );
   }
 
-  const publishedPages = (pageRows ?? [])
-    .filter((page) => page.published_content && page.published_at)
-    .map((page) => ({ pageType: page.page_type })) as StorefrontPageLink[];
+  const publishedPages = getPublishedStorePageTypes(pageRows ?? []).map(
+    (pageType) => ({ pageType }),
+  ) as StorefrontPageLink[];
   const catalog: StorefrontCartProduct[] = (products ?? []).map((product) => ({
     ...product,
     stock: resolveStorefrontStock(

@@ -24,7 +24,7 @@ const pageOptions: { type: StorePageType; label: string; purpose: string }[] = [
 ];
 
 const emptyDraft: Record<StorePageType, Draft> = {
-  about: { story: "", headline: "", mediaUrl: "" },
+  about: { story: "", headline: "", mediaUrl: "", mediaAlt: "" },
   contact: { email: "", phone: "", websiteUrl: "", address: "", serviceArea: "", hours: "" },
   faq: { items: [] },
   shipping_returns: {
@@ -37,6 +37,7 @@ const fieldLabels: Record<string, string> = {
   story: "Your story",
   headline: "Short heading",
   mediaUrl: "Supporting image URL",
+  mediaAlt: "Image alternative text",
   email: "Email address",
   phone: "Phone number",
   websiteUrl: "Website URL",
@@ -107,6 +108,9 @@ function readinessItems(pageType: StorePageType, draft: Draft) {
   const fields: { label: string; ready: boolean }[] = [];
   if (pageType === "about") {
     fields.push({ label: "Add a story of at least 10 characters", ready: textValue(draft, "story").trim().length >= 10 });
+    if (textValue(draft, "mediaUrl").trim()) {
+      fields.push({ label: "Describe the supporting image with meaningful alt text", ready: textValue(draft, "mediaAlt").trim().length >= 3 });
+    }
   } else if (pageType === "contact") {
     fields.push({
       label: "Add at least one way for customers to reach you",
@@ -141,8 +145,8 @@ function Field({
 }) {
   const id = `store-page-${field}`;
   const isLong = ["story", "address", "serviceArea", "hours", "deliveryAreas", "deliveryTime", "shippingCharges", "returnWindow", "returnEligibility", "returnSteps"].includes(field);
-  const maxLength = field === "story" ? 5000 : field === "headline" ? 100 : field.endsWith(".question") ? 180 : field === "phone" ? 30 : field === "address" || field === "serviceArea" || field === "hours" ? 500 : field === "returnContact" || field === "email" ? 254 : field === "mediaUrl" || field === "websiteUrl" ? 2048 : 2000;
-  const optional = ["headline", "mediaUrl", "email", "phone", "websiteUrl", "address", "serviceArea", "hours", "returnContact"].includes(field);
+  const maxLength = field === "story" ? 5000 : field === "headline" ? 100 : field.endsWith(".question") ? 180 : field === "phone" ? 30 : field === "address" || field === "serviceArea" || field === "hours" ? 500 : field === "returnContact" || field === "email" ? 254 : field === "mediaAlt" ? 250 : field === "mediaUrl" || field === "websiteUrl" ? 2048 : 2000;
+  const optional = ["headline", "mediaUrl", "mediaAlt", "email", "phone", "websiteUrl", "address", "serviceArea", "hours", "returnContact"].includes(field);
   return (
     <div className={`field store-page-field${isLong ? " span-two" : ""}`}>
       <label htmlFor={id}>{fieldLabels[field] ?? (field.endsWith(".question") ? "Question" : "Answer")}{optional && <span className="store-pages-optional">Optional</span>}</label>
@@ -168,7 +172,7 @@ function PageFields({
   updateField: (field: string, value: string | FaqItem[]) => void;
 }) {
   const fields = pageType === "about"
-    ? ["headline", "story", "mediaUrl"]
+    ? ["headline", "story", "mediaUrl", "mediaAlt"]
     : pageType === "contact"
       ? ["email", "phone", "websiteUrl", "address", "serviceArea", "hours"]
       : pageType === "shipping_returns"
@@ -198,7 +202,7 @@ function PageFields({
 
 function PreviewContent({ pageType, draft }: { pageType: StorePageType; draft: Draft }) {
   if (pageType === "about") {
-    return <>{textValue(draft, "headline") && <h3>{textValue(draft, "headline")}</h3>}{textValue(draft, "story") && <p>{textValue(draft, "story")}</p>}{textValue(draft, "mediaUrl") && <img className="store-pages-preview-image" src={textValue(draft, "mediaUrl")} alt="Merchant supplied page image" />}</>;
+    return <>{textValue(draft, "headline") && <h3>{textValue(draft, "headline")}</h3>}{textValue(draft, "story") && <p>{textValue(draft, "story")}</p>}{textValue(draft, "mediaUrl") && <img className="store-pages-preview-image" src={textValue(draft, "mediaUrl")} alt={textValue(draft, "mediaAlt")} />}</>;
   }
   if (pageType === "contact") {
     const items = ["email", "phone", "websiteUrl", "address", "serviceArea", "hours"].filter((field) => textValue(draft, field));

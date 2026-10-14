@@ -122,6 +122,22 @@ describe("public storefront information pages", () => {
     view.cleanup();
   });
 
+  it("renders the merchant supplied About image alt text", () => {
+    const view = renderPage({
+      pageType: "about",
+      content: {
+        pageType: "about",
+        story: "Details supplied by this merchant.",
+        mediaUrl: "https://example.com/workshop.jpg",
+        mediaAlt: "Potter shaping a bowl at the studio",
+      },
+      storeName: "North Shop",
+      templateId: "local",
+    });
+    expect(view.host.querySelector("img")?.getAttribute("alt")).toBe("Potter shaping a bowl at the studio");
+    view.cleanup();
+  });
+
   it("renders merchant FAQ pairs as semantic questions and answers without interpreting markup", () => {
     const view = renderPage({
       pageType: "faq",

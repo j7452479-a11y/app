@@ -86,7 +86,7 @@ export function StorefrontInformationPage({
         <article className="sf-information-story">
           {content.headline && <h2>{content.headline}</h2>}
           <PlainText>{content.story}</PlainText>
-          {content.mediaUrl && <img src={content.mediaUrl} alt="" />}
+          {content.mediaUrl && <img src={content.mediaUrl} alt={content.mediaAlt ?? ""} />}
         </article>
       )}
 

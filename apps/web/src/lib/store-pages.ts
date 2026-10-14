@@ -38,8 +38,18 @@ const aboutContentSchema = z
     story: plainText.min(10).max(5000),
     headline: optionalText(100).pipe(z.string().min(1).max(100).optional()),
     mediaUrl: optionalHttpsUrl,
+    mediaAlt: optionalText(250).pipe(z.string().min(3).max(250).optional()),
   })
-  .strict();
+  .strict()
+  .superRefine((content, context) => {
+    if (content.mediaUrl && !content.mediaAlt) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["mediaAlt"],
+        message: "Add meaningful alternative text for the supporting image",
+      });
+    }
+  });
 
 const contactContentSchema = z
   .object({
@@ -141,4 +151,18 @@ export function isStorePageReady(pageType: unknown, content: unknown): boolean {
       result.data.address ||
       result.data.serviceArea,
   );
+}
+
+export function getPublishedStorePageTypes(
+  rows: readonly {
+    page_type: unknown;
+    published_content: unknown;
+    published_at: unknown;
+  }[],
+): StorePageType[] {
+  return rows.flatMap((page) => {
+    if (!page.published_content || !page.published_at) return [];
+    const parsed = parseStorePageContent(page.page_type, page.published_content);
+    return parsed.success ? [parsed.data.pageType] : [];
+  });
 }

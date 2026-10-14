@@ -15,6 +15,10 @@ import { OrderChat } from "@/app/_components/order-chat";
 import { ShopRecommendations } from "@/app/_components/shop-recommendations";
 import { InstallStoreApp } from "@/app/_components/install-store-app";
 import { useStorefrontCart } from "@/app/_components/storefront-cart";
+import {
+  StorefrontProductCard,
+  type StorefrontProduct,
+} from "@/app/_components/storefront-product-card";
 
 declare global {
   interface Window {
@@ -25,14 +29,6 @@ declare global {
   }
 }
 
-type Product = {
-  id: string;
-  name: string;
-  description: string;
-  price_paise: number;
-  stock: number;
-  image_url: string | null;
-};
 const money = (paise: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -55,7 +51,7 @@ export function Storefront({
   name: string;
   description: string;
   template: string;
-  products: Product[];
+  products: StorefrontProduct[];
   paymentEnabled: boolean;
   codEnabled: boolean;
   recommendationsEnabled: boolean;
@@ -353,45 +349,13 @@ export function Storefront({
         )}
         {visibleProducts.length ? (
           <div className="sf-grid">
-            {visibleProducts.map((product, index) => (
-              <article className="sf-product" key={product.id}>
-                <div className="sf-product-image">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} />
-                  ) : (
-                    <span className={`sf-artwork art-${index % 4}`}>
-                      {name}
-                    </span>
-                  )}
-                </div>
-                <div className="sf-product-detail">
-                  <div>
-                    <h3>{product.name}</h3>
-                    <p>{product.description}</p>
-                  </div>
-                  <strong>{money(Number(product.price_paise))}</strong>
-                </div>
-                <div className="sf-stock">
-                  {product.stock > 0 ? "In stock" : "Currently unavailable"}
-                </div>
-                <button
-                  className="sf-add"
-                  disabled={
-                    product.stock < 1 ||
-                    (quantities[product.id] || 0) >= product.stock
-                  }
-                  onClick={(event) => {
-                    animateProductToBag(event.currentTarget);
-                    cart.addItem(product.id);
-                  }}
-                >
-                  {product.stock < 1
-                    ? "Sold out"
-                    : quantities[product.id]
-                      ? `Add another · ${quantities[product.id]} in bag`
-                      : "Add to bag +"}
-                </button>
-              </article>
+            {visibleProducts.map((product) => (
+              <StorefrontProductCard
+                key={product.id}
+                product={product}
+                storeSlug={slug}
+                onAdd={animateProductToBag}
+              />
             ))}
           </div>
         ) : (

@@ -1,0 +1,1361 @@
+<html>
+<head>
+<title>Commerce Design Intelligence</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --bg: #FAFAF8;
+  --surface: #F0F0EC;
+  --surface-raised: #FFFFFF;
+  --border: #D8D8D0;
+  --text: #1A1A1E;
+  --text-secondary: #5A5A62;
+  --text-tertiary: #8A8A92;
+  --accent: #3B4FC8;
+  --accent-soft: rgba(59, 79, 200, 0.08);
+  --success: #0D9F6F;
+  --warning: #E08A1E;
+  --danger: #D93025;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E0E10;
+    --surface: #1A1A1E;
+    --surface-raised: #222228;
+    --border: #333338;
+    --text: #EAEAEA;
+    --text-secondary: #A0A0A8;
+    --text-tertiary: #707078;
+    --accent: #6B7FF0;
+    --accent-soft: rgba(107, 127, 240, 0.12);
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #F87171;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0E0E10;
+  --surface: #1A1A1E;
+  --surface-raised: #222228;
+  --border: #333338;
+  --text: #EAEAEA;
+  --text-secondary: #A0A0A8;
+  --text-tertiary: #707078;
+  --accent: #6B7FF0;
+  --accent-soft: rgba(107, 127, 240, 0.12);
+  --success: #34D399;
+  --warning: #FBBF24;
+  --danger: #F87171;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 3rem 2rem 2.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-header h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.page-header .eyebrow {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.page-header .subtitle {
+  font-size: 1.0625rem;
+  color: var(--text-secondary);
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.stats-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-chip .num {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: Georgia, serif;
+}
+
+.stat-chip .label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.section {
+  padding: 2.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.section:last-child { border-bottom: none; }
+
+.section-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 0.375rem;
+  color: var(--text);
+}
+
+.section-desc {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  max-width: 640px;
+}
+
+.genre-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.genre-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  transition: border-color 0.15s;
+}
+
+.genre-card:hover {
+  border-color: var(--accent);
+}
+
+.genre-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.genre-name {
+  font-family: Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.genre-tag {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.6rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.genre-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.meta-block {}
+
+.meta-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.125rem;
+  font-weight: 500;
+}
+
+.meta-value {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.site-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.site-tag {
+  font-size: 0.6875rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.pattern-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.25rem;
+}
+
+.pattern-card h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+  color: var(--text);
+}
+
+.pattern-card p {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.callout {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  padding: 1rem 1.25rem;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.callout strong {
+  color: var(--accent);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 1rem 0;
+  background: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+table th {
+  background: var(--surface-raised);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+table tr:last-child td { border-bottom: none; }
+
+table td:first-child {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.color-palette {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.color-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.swatch-block {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.swatch-label {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  font-family: 'SF Mono', 'Consolas', monospace;
+  letter-spacing: 0.02em;
+}
+
+.phase-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin: 0.75rem 0;
+}
+
+.phase-block h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.phase-block ul {
+  padding-left: 1.25rem;
+}
+
+.phase-block li {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+.phase-block code {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 0.8125rem;
+  background: var(--surface-raised);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+
+.indian-sites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.indian-site-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.indian-site-card h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.indian-site-card .url {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  word-break: break-all;
+  margin-bottom: 0.375rem;
+}
+
+.indian-site-card .genre-match {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 0.375rem;
+}
+
+.indian-site-card .notes {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+footer {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.8125rem;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .page-header { padding: 2rem 1.25rem 1.75rem; }
+  .page-header h1 { font-size: 1.75rem; }
+  .container { padding: 0 1.25rem; }
+  .stats-row { gap: 0.5rem; }
+  .genre-meta { gap: 1rem; }
+  .pattern-grid { grid-template-columns: 1fr; }
+  .indian-sites-grid { grid-template-columns: 1fr; }
+  table { font-size: 0.8125rem; }
+  table th, table td { padding: 0.5rem 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="eyebrow">Reference Library Analysis</div>
+  <h1>Commerce Design Intelligence</h1>
+  <div class="subtitle">Functions, design patterns, color strategies, and sector recommendations across 700 benchmark sites in 14 commerce genres.</div>
+  <div class="stats-row">
+    <div class="stat-chip"><span class="num">700</span><span class="label">Sites</span></div>
+    <div class="stat-chip"><span class="num">14</span><span class="label">Genres</span></div>
+    <div class="stat-chip"><span class="num">50</span><span class="label">Per Genre</span></div>
+    <div class="stat-chip"><span class="num">10</span><span class="label">Indian Sites</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 1: Universal Principles -->
+  <div class="section">
+    <div class="section-title">Universal Design Principles</div>
+    <div class="section-desc">Patterns that appear across every genre and dictate the strongest sites regardless of sector.</div>
+
+    <div class="callout">
+      <strong>Core thesis:</strong> The best commerce sites reduce uncertainty at the moment it matters. Visual style follows the decision the customer needs to make — not aesthetic preference.
+    </div>
+
+    <div class="pattern-grid">
+      <div class="pattern-card">
+        <h4>Search vs. Editorial Balance</h4>
+        <p>Search earns space with broad catalogs (1000+ SKUs). Editorial composition earns space when taste, material, or provenance IS the product. Don't add search to feel "complete."</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Useful Specificity</h4>
+        <p>Ingredients, dimensions, fit, compatibility, delivery windows, lead times, renewal terms — these build trust. Decorative badges without substance destroy it.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Low-Risk Selection</h4>
+        <p>Variants, comparison, guidance, guarantees, and clear stock signals matter more than visual polish. Make selection feel safe, not impressive.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Action Matches Intent</h4>
+        <p>"Add to bag" ≠ "Choose size" ≠ "Schedule pickup" ≠ "Request quote." These are different customer decisions — don't disguise them behind generic CTAs.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Mobile is Structural</h4>
+        <p>Tap targets, persistent cart, short forms, and clear next steps must survive narrow viewports. Design mobile-first for high-frequency genres.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Frequency Dictates Density</h4>
+        <p>Daily essentials pack tight; considered purchases breathe. Product card density correlates with repeat purchase velocity, not catalog size alone.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Genre Analysis -->
+  <div class="section">
+    <div class="section-title">Genre-by-Genre Analysis</div>
+    <div class="section-desc">Every genre's visual grammar, customer flow, key features, color strategy, and representative sites.</div>
+
+    <div class="genre-list">
+
+      <!-- Genre 1 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">01 · Essential Commerce</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Quiet neutrals, clear product grid, visible search, minimal visual noise</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Search → category → product → short checkout</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #1A1A1E;"></div><span class="swatch-label">#1A1A1E</span>
+                <div class="swatch-block" style="background: #FFFFFF; border-color: #ccc;"></div><span class="swatch-label">#FFF</span>
+                <div class="swatch-block" style="background: #F5F5F0;"></div><span class="swatch-label">#F5F5F0</span>
+                <div class="swatch-block" style="background: #5A5A62;"></div><span class="swatch-label">#5A5A62</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Sticky filter drawer · lightning-fast mobile cart · predictive search · size pills · express checkout</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Allbirds</span>
+          <span class="site-tag">Everlane</span>
+          <span class="site-tag">Muji</span>
+          <span class="site-tag">Ugmonk</span>
+          <span class="site-tag">Buck Mason</span>
+          <span class="site-tag">Glossier</span>
+          <span class="site-tag">Casper</span>
+        </div>
+      </div>
+
+      <!-- Genre 2 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">02 · Fashion Atelier</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Campaign-led, tall product photography, collection chapters, editorial spacing, stark or romantic aesthetics</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Collection → lookbook → size/color choice → bag</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #000;"></div><span class="swatch-label">#000</span>
+                <div class="swatch-block" style="background: #FFF; border-color: #ccc;"></div><span class="swatch-label">#FFF</span>
+                <div class="swatch-block" style="background: #C4B5A0;"></div><span class="swatch-label">#C4B5A0</span>
+                <div class="swatch-block" style="background: #8B7D6B;"></div><span class="swatch-label">#8B7D6B</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Lookbook navigation · model height toggles · runway video · swatch selectors · multi-angle model views</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Reformation</span>
+          <span class="site-tag">Sézane</span>
+          <span class="site-tag">Toteme</span>
+          <span class="site-tag">Aimé Leon Dore</span>
+          <span class="site-tag">SSENSE</span>
+          <span class="site-tag">COS</span>
+        </div>
+      </div>
+
+      <!-- Genre 3 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">03 · Beauty Studio</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Soft color palettes, routine sequence, ingredient callouts, clinical data, pastel aesthetics</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Concern → routine → product → trust details</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #F7E8E8;"></div><span class="swatch-label">#F7E8E8</span>
+                <div class="swatch-block" style="background: #F0E6F6;"></div><span class="swatch-label">#F0E6F6</span>
+                <div class="swatch-block" style="background: #E8F0E6;"></div><span class="swatch-label">#E8F0E6</span>
+                <div class="swatch-block" style="background: #2A2A2A;"></div><span class="swatch-label">#2A2A2A</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Shade matching tools · routine builders · before/after sliders · clinical trial data · ingredient badges</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Glossier</span>
+          <span class="site-tag">Fenty Beauty</span>
+          <span class="site-tag">The Ordinary</span>
+          <span class="site-tag">Drunk Elephant</span>
+          <span class="site-tag">Aesop</span>
+          <span class="site-tag">Tower 28</span>
+        </div>
+      </div>
+
+      <!-- Genre 4 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">04 · Electronics Grid</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Cool precise palette, spec hierarchy, comparison tables, technical diagrams, clean data presentation</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Filter → compare → check compatibility → buy</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #0066FF;"></div><span class="swatch-label">#0066FF</span>
+                <div class="swatch-block" style="background: #F6F7F9;"></div><span class="swatch-label">#F6F7F9</span>
+                <div class="swatch-block" style="background: #1C1C1E;"></div><span class="swatch-label">#1C1C1E</span>
+                <div class="swatch-block" style="background: #86868B;"></div><span class="swatch-label">#86868B</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Side-by-side comparison · tech spec tabs · compatibility filters · warranty badges · 3D product models</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Apple</span>
+          <span class="site-tag">Framework</span>
+          <span class="site-tag">Teenage Engineering</span>
+          <span class="site-tag">Peak Design</span>
+          <span class="site-tag">Keychron</span>
+          <span class="site-tag">DJI</span>
+        </div>
+      </div>
+
+      <!-- Genre 5 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">05 · Home & Furniture</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Room-scale imagery, material palettes, generous spacing, dimensional diagrams, contextual photography</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Shop by room → inspect dimensions → delivery clarity</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #C8B89A;"></div><span class="swatch-label">#C8B89A</span>
+                <div class="swatch-block" style="background: #F8F6F2;"></div><span class="swatch-label">#F8F6F2</span>
+                <div class="swatch-block" style="background: #3A3632;"></div><span class="swatch-label">#3A3632</span>
+                <div class="swatch-block" style="background: #6B8E6B;"></div><span class="swatch-label">#6B8E6B</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Room visualizers · modular builders · fabric swatch ordering · dimensional schematics · delivery calculators</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Article</span>
+          <span class="site-tag">Floyd</span>
+          <span class="site-tag">Herman Miller</span>
+          <span class="site-tag">Hay Design</span>
+          <span class="site-tag">Interior Define</span>
+          <span class="site-tag">West Elm</span>
+        </div>
+      </div>
+
+      <!-- Genre 6 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">06 · Grocery & Daily Needs</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Dense but legible, category rail, persistent basket, availability indicators, cart-first UX</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Availability → fast add → delivery slot → checkout</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #00755F;"></div><span class="swatch-label">#00755F</span>
+                <div class="swatch-block" style="background: #FFF9F0;"></div><span class="swatch-label">#FFF9F0</span>
+                <div class="swatch-block" style="background: #2D2D2D;"></div><span class="swatch-label">#2D2D2D</span>
+                <div class="swatch-block" style="background: #FF6B35;"></div><span class="swatch-label">#FF6B35</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Inline stepper buttons · repeat order bar · delivery slot picker · postal validation · substitution prefs</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Instacart</span>
+          <span class="site-tag">Ocado</span>
+          <span class="site-tag">Thrive Market</span>
+          <span class="site-tag">Weee!</span>
+          <span class="site-tag">BigBasket</span>
+        </div>
+      </div>
+
+      <!-- Genre 7 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">07 · Food & Restaurant</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Appetite-led imagery, menu sections, modifier patterns, time indicators, food photography</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Pickup/delivery → menu → options → time → order</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #FF4136;"></div><span class="swatch-label">#FF4136</span>
+                <div class="swatch-block" style="background: #FF851B;"></div><span class="swatch-label">#FF851B</span>
+                <div class="swatch-block" style="background: #2ECC00;"></div><span class="swatch-label">#2ECC00</span>
+                <div class="swatch-block" style="background: #1A1A1E;"></div><span class="swatch-label">#1A1A1E</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Custom bowl builders · add-on modifiers · pickup time slots · allergen filters · nutrition calculators</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Sweetgreen</span>
+          <span class="site-tag">Chipotle</span>
+          <span class="site-tag">Goldbelly</span>
+          <span class="site-tag">Blue Bottle</span>
+          <span class="site-tag">Salt & Straw</span>
+        </div>
+      </div>
+
+      <!-- Genre 8 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">08 · Artisan Market</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Tactile, asymmetrical layouts, maker-led editorial, process photography, craft heritage</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Maker story → provenance → lead time → purchase</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #E8DCC8;"></div><span class="swatch-label">#E8DCC8</span>
+                <div class="swatch-block" style="background: #4A4036;"></div><span class="swatch-label">#4A4036</span>
+                <div class="swatch-block" style="background: #B85C38;"></div><span class="swatch-label">#B85C38</span>
+                <div class="swatch-block" style="background: #6B8E23;"></div><span class="swatch-label">#6B8E23</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Maker profile spotlights · batch number stamps · workshop videos · made-to-order timelines · origin stories</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Etsy</span>
+          <span class="site-tag">East Fork Pottery</span>
+          <span class="site-tag">Heath Ceramics</span>
+          <span class="site-tag">Shinola</span>
+          <span class="site-tag">Nisolo</span>
+        </div>
+      </div>
+
+      <!-- Genre 9 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">09 · Premium Luxury</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Restrained navigation, serif/sans contrast, wide negative space, full-bleed imagery, editorial typography</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Collection → detail → advisor/appointment or purchase</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #000;"></div><span class="swatch-label">#000</span>
+                <div class="swatch-block" style="background: #F5F0EB;"></div><span class="swatch-label">#F5F0EB</span>
+                <div class="swatch-block" style="background: #C9A96E;"></div><span class="swatch-label">#C9A96E</span>
+                <div class="swatch-block" style="background: #3D3D3D;"></div><span class="swatch-label">#3D3D3D</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Concierge booking · private salon appointments · certificate transparency · bespoke inquiry · heritage archives</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Cartier</span>
+          <span class="site-tag">Rolex</span>
+          <span class="site-tag">Hermès</span>
+          <span class="site-tag">The Row</span>
+          <span class="site-tag">Loro Piana</span>
+        </div>
+      </div>
+
+      <!-- Genre 10 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">10 · Local Business</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Place-first identity, hours/contact prominent, warm utility, neighborhood photography, community focus</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Location/hours → local availability → call/message/order</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #F4A460;"></div><span class="swatch-label">#F4A460</span>
+                <div class="swatch-block" style="background: #2F4F4F;"></div><span class="swatch-label">#2F4F4F</span>
+                <div class="swatch-block" style="background: #FAF0E6;"></div><span class="swatch-label">#FAF0E6</span>
+                <div class="swatch-block" style="background: #1A1A1E;"></div><span class="swatch-label">#1A1A1E</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Store locator · direct phone/WhatsApp CTA · delivery radius maps · pickup windows · local event calendar</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Good Eggs</span>
+          <span class="site-tag">Russ & Daughters</span>
+          <span class="site-tag">Powell's Books</span>
+          <span class="site-tag">Zingerman's</span>
+          <span class="site-tag">Bi-Rite Market</span>
+        </div>
+      </div>
+
+      <!-- Genre 11 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">11 · B2B Catalog</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Structured data, clear tables, utilitarian hierarchy, technical documentation, spec-first presentation</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Search → spec → quantity/breaks → quote or account terms</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #003DA5;"></div><span class="swatch-label">#003DA5</span>
+                <div class="swatch-block" style="background: #F0F2F5;"></div><span class="swatch-label">#F0F2F5</span>
+                <div class="swatch-block" style="background: #333;"></div><span class="swatch-label">#333</span>
+                <div class="swatch-block" style="background: #FF6600;"></div><span class="swatch-label">#FF6600</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Tiered bulk pricing · CAD file downloads · RFQ workflows · account registration · datasheet libraries</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">McMaster-Carr</span>
+          <span class="site-tag">Grainger</span>
+          <span class="site-tag">MISUMI</span>
+          <span class="site-tag">DigiKey</span>
+          <span class="site-tag">Uline</span>
+        </div>
+      </div>
+
+      <!-- Genre 12 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">12 · Subscription Products</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Frequency controls, savings economics, pause modal, member perks, clear renewal terms</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Item → compare frequency/terms → manage renewal</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #E06C75;"></div><span class="swatch-label">#E06C75</span>
+                <div class="swatch-block" style="background: #F8F4F0;"></div><span class="swatch-label">#F8F4F0</span>
+                <div class="swatch-block" style="background: #1A1A1E;"></div><span class="swatch-label">#1A1A1E</span>
+                <div class="swatch-block" style="background: #50C878;"></div><span class="swatch-label">#50C878</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Cadence calculator · subscribe & save toggles · skip/pause modals · box preview · frequency adjusters</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Dollar Shave Club</span>
+          <span class="site-tag">ButcherBox</span>
+          <span class="site-tag">Trade Coffee</span>
+          <span class="site-tag">Ritual</span>
+          <span class="site-tag">BarkBox</span>
+        </div>
+      </div>
+
+      <!-- Genre 13 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">13 · Professional Services</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Outcome-led editorial, scope clarity, investment transparency, case studies, service comparison matrix</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Service fit → evidence → intake → booking</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #1E3A5F;"></div><span class="swatch-label">#1E3A5F</span>
+                <div class="swatch-block" style="background: #F8F9FA;"></div><span class="swatch-label">#F8F9FA</span>
+                <div class="swatch-block" style="background: #2C5282;"></div><span class="swatch-label">#2C5282</span>
+                <div class="swatch-block" style="background: #48BB78;"></div><span class="swatch-label">#48BB78</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Tier comparison tables · interactive intake forms · calendar booking · case study deep dives · RFP workflows</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">IDEO</span>
+          <span class="site-tag">Pentagram</span>
+          <span class="site-tag">Metalab</span>
+          <span class="site-tag">General Assembly</span>
+          <span class="site-tag">BetterUp</span>
+        </div>
+      </div>
+
+      <!-- Genre 14 -->
+      <div class="genre-card">
+        <div class="genre-header">
+          <span class="genre-name">14 · Modern Marketplace</span>
+          <span class="genre-tag">50 sites</span>
+        </div>
+        <div class="genre-meta">
+          <div class="meta-block">
+            <div class="meta-label">Visual Grammar</div>
+            <div class="meta-value">Mega-menu, search-dominant header, dynamic promos, curated collections, dense facet filters</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Customer Flow</div>
+            <div class="meta-value">Search → filter → compare → quick purchase</div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Colors</div>
+            <div class="meta-value">
+              <div class="color-palette">
+                <div class="swatch-block" style="background: #FF9900;"></div><span class="swatch-label">#FF9900</span>
+                <div class="swatch-block" style="background: #146EB4;"></div><span class="swatch-label">#146EB4</span>
+                <div class="swatch-block" style="background: #E01E5A;"></div><span class="swatch-label">#E01E5A</span>
+                <div class="swatch-block" style="background: #FFFFFF; border-color: #ccc;"></div><span class="swatch-label">#FFF</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta-block">
+            <div class="meta-label">Key Features</div>
+            <div class="meta-value">Mega-menu taxonomy · advanced faceted filters · loyalty rewards · flash deal timers · personalized recs</div>
+          </div>
+        </div>
+        <div class="site-tags">
+          <span class="site-tag">Amazon</span>
+          <span class="site-tag">ASOS</span>
+          <span class="site-tag">Wayfair</span>
+          <span class="site-tag">Target</span>
+          <span class="site-tag">Sephora</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: Indian Sites Analysis -->
+  <div class="section">
+    <div class="section-title">Indian Market — 10 Site Analysis</div>
+    <div class="section-desc">How the 10 specific sites from site.txt map to the 14-genre framework, with actionable design takeaways.</div>
+
+    <div class="indian-sites-grid">
+      <div class="indian-site-card">
+        <h4>Myntra</h4>
+        <div class="url">myntra.com</div>
+        <div class="genre-match">Genre: Fashion Atelier + Modern Marketplace</div>
+        <div class="notes">Fashion marketplace with search-dominant hybrid. Tall product cards, brand filters, style discovery. Key patterns: size filters, brand tiers, trial-at-home, easy returns.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>Ajio</h4>
+        <div class="url">ajio.com</div>
+        <div class="genre-match">Genre: Fashion Atelier</div>
+        <div class="notes">Fashion retailer with campaign-led editorial, sale-driven promos (All-Star Sale). Brand-centric sections, lookbook-style navigation, seasonal collections.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>Croma</h4>
+        <div class="url">croma.com</div>
+        <div class="genre-match">Genre: Electronics Grid</div>
+        <div class="notes">Electronics retailer with spec-heavy product cards, comparison tools, brand filtering. Features warranty info, exchange offers, EMI options.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>Amazon.in</h4>
+        <div class="url">amazon.in</div>
+        <div class="genre-match">Genre: Modern Marketplace</div>
+        <div class="notes">Multi-category mega-store. Search-dominant, mega-menu, dense taxonomy. Personalized recommendations, flash deals, Prime loyalty.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>Flipkart</h4>
+        <div class="url">flipkart.com</div>
+        <div class="genre-match">Genre: Modern Marketplace</div>
+        <div class="notes">Indian marketplace with search-first, category rails, Big Billion sale events. Mobile-heavy, UPI integration, cash-on-delivery.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>Nykaa</h4>
+        <div class="url">nykaa.com</div>
+        <div class="genre-match">Genre: Beauty Studio</div>
+        <div class="notes">Beauty and wellness with routine-focused shopping, shade matching, editorial content. Soft palette, brand storytelling, tutorial integration.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>IndiaMART</h4>
+        <div class="url">indiamart.com</div>
+        <div class="genre-match">Genre: B2B Catalog</div>
+        <div class="notes">B2B marketplace with RFQ workflows, supplier verification, bulk pricing. Utilitarian data presentation, category taxonomy, lead generation.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>Decathlon.in</h4>
+        <div class="url">decathlon.in</div>
+        <div class="genre-match">Genre: Essential Commerce + Sports Specialty</div>
+        <div class="notes">Sporting goods with sport-based navigation, product filtering by activity. Dense grid, clear pricing, store pickup options.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>PVR Cinemas</h4>
+        <div class="url">pvrcinemas.com</div>
+        <div class="genre-match">Genre: Professional Services (Booking)</div>
+        <div class="notes">Entertainment booking with movie selection, showtime scheduling, seat selection. Time-sensitive flow, location-based results.</div>
+      </div>
+      <div class="indian-site-card">
+        <h4>Swiggy</h4>
+        <div class="url">swiggy.com</div>
+        <div class="genre-match">Genre: Food & Restaurant</div>
+        <div class="notes">Food delivery with restaurant browsing, menu modifiers, delivery time estimates. Location-first, persistent cart, real-time tracking.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Cross-Genre Patterns -->
+  <div class="section">
+    <div class="section-title">Cross-Genre Design Patterns</div>
+    <div class="section-desc">Reusable patterns that span multiple genres, with guidance on when each applies.</div>
+
+    <div class="pattern-grid">
+      <div class="pattern-card">
+        <h4>Search vs. Navigation</h4>
+        <p>Search-dominant: Grocery, Electronics, Marketplace (1000+ SKUs). Navigation-dominant: Fashion, Artisan, Luxury (200 curated pieces). Match to catalog breadth.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Product Card Density</h4>
+        <p>Dense grid: Essential, Grocery, Marketplace. Tall hero cards: Fashion, Luxury. Density tracks repeat purchase velocity.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Trust Signal Type</h4>
+        <p>Beauty: ingredients. Electronics: specs/warranty. Artisan: maker stories. B2B: certification. Match the signal to the risk being reduced.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Cart Visibility</h4>
+        <p>Persistent mini-cart: Grocery, Food. Slide-out drawer: Essential, Fashion. Hidden until add: Luxury. Visibility tracks frequency.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Location Priority</h4>
+        <p>Critical: Local, Grocery, Food. Moderate: Home (delivery). Absent: Digital goods, Subscription. Follow fulfillment complexity.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Time Dimension</h4>
+        <p>Grocery: delivery slots. Food: pickup times. Artisan: lead times. Subscription: cadence. Luxury: appointment booking.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Sector Application Guide -->
+  <div class="section">
+    <div class="section-title">Sector-to-Style Application Guide</div>
+    <div class="section-desc">Which genre's design approach to adopt for each business type, with specific patterns to implement.</div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Business Type</th>
+            <th>Primary Genre</th>
+            <th>Patterns to Adopt</th>
+            <th>Color Approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>General retail / DTC brand</td>
+            <td>Essential Commerce</td>
+            <td>Clean grid, predictive search, quick checkout, mobile cart</td>
+            <td>Neutral minimal, high contrast</td>
+          </tr>
+          <tr>
+            <td>Clothing / apparel</td>
+            <td>Fashion Atelier</td>
+            <td>Lookbook nav, size/color swatches, model views, collections</td>
+            <td>Editorial B&W + accent</td>
+          </tr>
+          <tr>
+            <td>Cosmetics / skincare</td>
+            <td>Beauty Studio</td>
+            <td>Routine builders, shade matchers, ingredient transparency</td>
+            <td>Soft pastels, clinical feel</td>
+          </tr>
+          <tr>
+            <td>Tech hardware / gadgets</td>
+            <td>Electronics Grid</td>
+            <td>Spec tables, comparison tools, compatibility filters</td>
+            <td>Cool precise, data-viz</td>
+          </tr>
+          <tr>
+            <td>Furniture / home decor</td>
+            <td>Home & Furniture</td>
+            <td>Room visualizers, material swatches, dimensional diagrams</td>
+            <td>Warm earth tones</td>
+          </tr>
+          <tr>
+            <td>Grocery / daily essentials</td>
+            <td>Grocery & Daily Needs</td>
+            <td>Category rail, inline add, delivery slots, repeat orders</td>
+            <td>Green/orange, vibrant</td>
+          </tr>
+          <tr>
+            <td>Restaurant / bakery / cafe</td>
+            <td>Food & Restaurant</td>
+            <td>Menu sections, modifiers, pickup slots, appetite photos</td>
+            <td>Warm appetite-driven</td>
+          </tr>
+          <tr>
+            <td>Handmade / craft goods</td>
+            <td>Artisan Market</td>
+            <td>Maker profiles, process stories, batch numbers, lead times</td>
+            <td>Organic, tactile palette</td>
+          </tr>
+          <tr>
+            <td>High-end fashion / jewelry</td>
+            <td>Premium Luxury</td>
+            <td>Generous spacing, minimal nav, appointment booking</td>
+            <td>Black/white/gold restraint</td>
+          </tr>
+          <tr>
+            <td>Neighborhood shop</td>
+            <td>Local Business</td>
+            <td>Location header, hours, direct contact, delivery radius</td>
+            <td>Warm community feel</td>
+          </tr>
+          <tr>
+            <td>Wholesale / distributor</td>
+            <td>B2B Catalog</td>
+            <td>Bulk pricing, RFQ forms, spec downloads, account flows</td>
+            <td>Utilitarian, corporate</td>
+          </tr>
+          <tr>
+            <td>Recurring delivery / club</td>
+            <td>Subscription Products</td>
+            <td>Frequency selectors, savings display, pause/skip controls</td>
+            <td>Approachable, friendly</td>
+          </tr>
+          <tr>
+            <td>Consultant / agency</td>
+            <td>Professional Services</td>
+            <td>Service comparison, case studies, intake forms, booking</td>
+            <td>Professional, trustworthy</td>
+          </tr>
+          <tr>
+            <td>Multi-brand / large catalog</td>
+            <td>Modern Marketplace</td>
+            <td>Mega-menu, advanced filters, search-dominant, loyalty</td>
+            <td>Brand primary + promo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 6: Implementation Roadmap -->
+  <div class="section">
+    <div class="section-title">Implementation Roadmap</div>
+    <div class="section-desc">Three-phase rollout for any genre, from foundation to differentiation.</div>
+
+    <div class="phase-block">
+      <h3>Phase 1 — Foundation (Weeks 1-2)</h3>
+      <ul>
+        <li>Select <code>1-2 primary genres</code> matching your business model and purchase behavior</li>
+        <li>Implement search vs. editorial navigation based on catalog size (1000+ SKUs → search)</li>
+        <li>Set product grid density: tight for high-frequency, spacious for considered purchases</li>
+        <li>Ensure mobile layout: tap targets ≥ 44px, persistent cart, thumb-friendly zones</li>
+      </ul>
+    </div>
+
+    <div class="phase-block">
+      <h3>Phase 2 — Trust & Conversion (Weeks 3-4)</h3>
+      <ul>
+        <li>Add genre-appropriate trust signals: specs, ingredients, maker stories, warranties</li>
+        <li>Include dimensions, compatibility, fit guides, or lead times on product pages</li>
+        <li>Choose cart pattern: persistent (high freq) → drawer (medium) → hidden (considered)</li>
+        <li>Streamline checkout to 2-3 steps, add express options</li>
+      </ul>
+    </div>
+
+    <div class="phase-block">
+      <h3>Phase 3 — Differentiation (Weeks 5-6)</h3>
+      <ul>
+        <li>Apply genre color palette and typography as visual identity</li>
+        <li>Add comparison tools, builders, customizers, or booking features</li>
+        <li>Implement social proof: reviews, certificates, case studies</li>
+        <li>Layer advanced filtering: facets, size guides, material selectors</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 7: Key Takeaways -->
+  <div class="section">
+    <div class="section-title">Key Takeaways</div>
+    <div class="section-desc">Principles that apply regardless of genre, sector, or scale.</div>
+
+    <div class="callout">
+      <strong>Match genre to behavior, not aesthetics.</strong> Don't force luxury spacing on grocery essentials, or dense grids on handmade goods. Purchase frequency and decision complexity drive the pattern.
+    </div>
+    <div class="callout">
+      <strong>Trust signals must be real.</strong> Never fabricate specs, ingredients, reviews, delivery windows, or origin claims. Useful specificity builds trust; decorative badges destroy it.
+    </div>
+    <div class="callout">
+      <strong>Mobile is not a breakpoint — it's a structure.</strong> Tap targets, persistent cart context, and clear next steps must survive narrow viewports. Design mobile-first for high-frequency genres.
+    </div>
+    <div class="callout">
+      <strong>Actions should match intent.</strong> "Add to bag," "Choose size," "Schedule pickup," "Request quote," and "Subscribe" are different customer decisions. Don't hide them behind generic CTAs.
+    </div>
+    <div class="callout">
+      <strong>Search vs. editorial is a spectrum, not a binary.</strong> Most sites sit between the two poles. The question is how much screen real estate each earns — and the answer follows catalog breadth and decision type.
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>Commerce Design Intelligence Report · 700 sites across 14 genres · October 2026</p>
+  <p style="margin-top: 0.25rem;">Analysis based on publicly available websites and UX patterns. All site names are references for research purposes.</p>
+</footer>
+
+</body>
+</html>

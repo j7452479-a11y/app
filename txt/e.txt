@@ -1,0 +1,1092 @@
+I’ll consolidate the three documents into one implementation plan, resolve their conflicting requirements, and identify the gaps that matter for production. I’ll also verify the technical assumptions around tenant isolation, payments, caching, and deployment before recommending the final architecture.**Your project has a sound core idea, but the documents still need substantial work before they can guide a production build reliably.** The strongest direction is a shared business platform where you configure each client’s website, catalog, and operational modules, then manage orders, inventory, bookings, and communications through one tenant dashboard.
+
+I reviewed the material you supplied across all three documents. The 65-page plan is the strongest foundation. The conversation exports explain your business intent, but contain repeated praise, conflicting decisions, incomplete code, and unsupported claims about cost, capacity, security, and delivery speed.
+
+My assessment is:
+
+| Area | Assessment |
+|---|---|
+| Product vision | Clear and commercially testable |
+| Functional coverage | Broad, with several important gaps |
+| Architecture direction | Good foundation |
+| Business rules | Incomplete and sometimes contradictory |
+| Implementation specificity | Insufficient for agents to execute consistently |
+| Production readiness | Described as a goal; not demonstrated |
+| AI development workflow | Needs contracts, ownership, and independent verification |
+
+The plan below preserves your **free setup, 30-day trial, recurring management subscription, assisted customization, shared runtime, and modular JSON configuration**. It covers the full product rather than reducing it to an MVP. Delivery is staged so each part can be verified before the full public release.
+
+All technology selections, timelines, numerical targets, and commercial policies below are **proposed planning decisions**, not claims that the platform has already achieved them.
+
+**1. Establish one authoritative project definition**
+
+Use this as the product definition:
+
+> A managed platform that gives businesses a branded website and business dashboard. Clients submit their requirements, design preferences, and catalog. The platform owner uses AI assistance to map those requirements to supported modules, prepare the site, obtain client approval, and publish it. Businesses use the dashboard to manage their daily operations. Standard setup is free, followed by a clearly disclosed 30-day trial and recurring subscription.
+
+There are three distinct participants:
+
+| Participant | Responsibilities |
+|---|---|
+| Platform operator—you | Review requirements, prepare sites, manage releases, support clients, operate the platform |
+| Merchant/client | Supply accurate content, approve the site, connect payments, manage staff and operations |
+| Shopper/end customer | Browse, purchase, book, request quotes, communicate, manage their own account |
+
+A client website is an instance of the shared runtime. A genuinely new feature requires engineering a supported capability before it can be enabled through configuration.
+
+**JSON can configure implemented behavior. It cannot create an unimplemented booking engine, inventory system, or custom workflow by itself.**
+
+Your project should support both assisted onboarding and self-service operations. Clients can manage products, inventory, orders, and permitted settings; major design or feature changes can remain request-based, as you originally intended.
+
+**2. Correct the most consequential weaknesses in the supplied plans**
+
+| Problem in the supplied material | Required correction |
+|---|---|
+| Tenant lifecycle combines onboarding, publication, billing, suspension, and deletion | Separate these into independent state machines |
+| Order status combines fulfillment and payment | Separate order, payment, fulfillment, return, and dispute states |
+| RLS example checks only a tenant session variable | Define trusted identity context, membership checks, database roles, grants, and transaction boundaries |
+| Public product policy permits all published product rows | Serve an explicitly limited public catalog projection for the resolved site |
+| AI input contains `organizationId`, `actorUserId`, and `requiresApproval` | Derive identity from authenticated context and determine approval through server policy |
+| Generic AI payload uses `z.any()` | Give every tool a strict, action-specific input and output schema |
+| Stripe handler defaults unfamiliar statuses to `active` | Handle all supported statuses explicitly and fail safely for unknown cases |
+| Webhook code claims idempotency without implementing an inbox | Persist deduplication and processing outcomes |
+| Subscription payments and merchant customer payments are combined | Separate SaaS billing from merchant commerce payments |
+| Checkout restriction is implemented through disabled buttons | Enforce restrictions in every transaction creation API |
+| Dashboard becomes entirely inaccessible after failed payment | Preserve access needed for existing obligations, billing, export, and account closure |
+| Cache invalidation is described as globally instantaneous | Define and test propagation behavior for the chosen deployment |
+| Backups are treated as sufficient recovery | Include storage, secrets, deployment configuration, external payments, and post-restore reconciliation |
+| Deployment workflow ends with `echo` | Implement actual artifact deployment, migration execution, verification, and rollback |
+| “Any business” implies arbitrary feature support | Publish a supported capability matrix and an exception process |
+| Free hosting appears indefinite | Define retention, hosting duration, bandwidth limits, and cancellation behavior |
+| Client intake requests payment API keys | Use provider onboarding or authorization flows; keep credentials out of forms |
+| Agent screenshots are treated as proof | Require repeatable tests and deployment evidence |
+| Security scanning is treated as a guarantee | Use layered verification and independent review |
+
+PostgreSQL specifically documents that superusers and `BYPASSRLS` roles bypass RLS, and table owners normally bypass it unless forced. This makes the application’s actual database role a critical part of isolation—not merely whether policies exist. ([postgresql.org](https://www.postgresql.org/docs/current/ddl-rowsecurity.html?utm_source=openai))
+
+Stripe documents duplicate webhook delivery and does not guarantee event ordering. The payment implementation must tolerate both. ([docs.stripe.com](https://docs.stripe.com/webhooks))
+
+Cloudflare KV writes can take up to 60 seconds, or the configured cache TTL, to become visible elsewhere. Also, self-hosted Next.js instances require coordinated caching and invalidation. The documents’ global sub-300ms purge claim should therefore be removed. ([developers.cloudflare.com](https://developers.cloudflare.com/kv/api/write-key-value-pairs/?utm_source=openai))
+
+**3. Add the missing commercial and service rules**
+
+Your free-build model can remain. Make its boundaries explicit so the software and service workload are predictable.
+
+Recommended improvements:
+
+1. Define what standard free setup includes.
+2. Publish which business modules are supported.
+3. Distinguish configuration requests from new feature development.
+4. Record an agreed client requirements document before preparation.
+5. Limit included design revision rounds.
+6. Define when the trial begins.
+7. Show the renewal price and date before trial activation.
+8. Record acceptance of recurring billing terms.
+9. Keep cancellation accessible from the dashboard.
+10. Define a failed-payment grace period.
+11. Define the period for fulfilling existing orders after restriction.
+12. Define read access and export availability after cancellation.
+13. Define how long the public catalog remains hosted.
+14. Define domain ownership and transfer responsibilities.
+15. Define ownership and permitted use of uploaded assets.
+16. Separate subscription fees from messaging and AI usage.
+17. Show usage warnings before paid limits are reached.
+18. Prevent automatic unapproved overage spending.
+19. Define service response times and escalation.
+20. Track setup effort and support cost per client.
+
+My recommended trial policy is: **start the 30-day trial when the client accepts a site that is ready for live operation**, rather than consuming the trial while you are still preparing it. Put an expiry on incomplete onboarding so abandoned accounts cannot consume resources indefinitely.
+
+Use a unit economics model:
+
+```text
+Monthly contribution per paying tenant
+= subscription revenue
++ approved usage revenue
+- hosting and storage allocation
+- messaging and AI costs
+- provider-related platform costs
+- support and maintenance allocation
+```
+
+Track the acquisition cost of free setups that never convert. Use observed conversion, retention, and support effort before deciding whether the offer is profitable.
+
+The earlier estimates of “8–15 sites per day,” “100,000 sites without infrastructure changes,” and very low monthly infrastructure costs should be treated as unvalidated assumptions.
+
+**4. Adopt a concrete architecture**
+
+I recommend a **modular monolith for business logic, with separate web applications and independently running workers**.
+
+Proposed baseline:
+
+| Concern | Proposed selection |
+|---|---|
+| Workspace | pnpm and Turborepo |
+| Web applications | Next.js and TypeScript |
+| Business API | TypeScript service using Fastify |
+| Validation | Zod and generated OpenAPI contracts |
+| Database | Managed PostgreSQL |
+| Database access | Drizzle with a mandatory tenant transaction wrapper |
+| Authentication | Managed identity provider |
+| Object storage | S3-compatible storage |
+| Background work | Durable queue, outbox dispatcher, isolated workers |
+| Realtime | Managed gateway consuming committed domain events |
+| UI | Tailwind, accessible primitives, shared design tokens |
+| Verification | Unit tests, database integration tests, Playwright |
+| Observability | OpenTelemetry, centralized logs, error tracking |
+| Infrastructure | Terraform and managed containers |
+| Deployment | Immutable artifacts promoted through staging to production |
+
+Choose one provider for each concern in an architecture decision record. Avoid leaving decisions such as “Supabase/Auth.js,” “Prisma/Drizzle,” and “Vercel/AWS/Cloudflare” unresolved when agents begin implementation.
+
+A suitable repository:
+
+```text
+apps/
+  marketing/
+  storefront/
+  dashboard/
+  admin/
+  api/
+  worker/
+
+packages/
+  contracts/
+  database/
+  identity/
+  authorization/
+  tenant-context/
+  configuration/
+  commerce/
+  inventory/
+  bookings/
+  quotes/
+  messaging/
+  billing/
+  integrations/
+  ai/
+  ui/
+  observability/
+  testing/
+
+infra/
+  environments/
+  modules/
+  deployment/
+  monitoring/
+
+docs/
+  requirements/
+  architecture/
+  decisions/
+  contracts/
+  security/
+  runbooks/
+  release-evidence/
+```
+
+Domain modules can initially live inside these packages. Create additional packages when there is a useful ownership or dependency boundary.
+
+Use this deployment model:
+
+```mermaid
+flowchart LR
+    Shopper[Shopper] --> Edge[Domain routing and CDN]
+    Edge --> Storefront[Storefront]
+    Merchant[Merchant] --> Dashboard[Dashboard]
+    Operator[Platform operator] --> Admin[Admin]
+    Storefront --> API[Business API]
+    Dashboard --> API
+    Admin --> API
+    API --> DB[(PostgreSQL)]
+    API --> Storage[(Object storage)]
+    Provider[Payment and messaging providers] --> Inbox[Verified webhook inbox]
+    Inbox --> DB
+    DB --> Dispatcher[Outbox dispatcher]
+    Dispatcher --> Queue[Durable queue]
+    Queue --> Worker[Workers]
+    Worker --> Provider
+    Worker --> Realtime[Realtime gateway]
+    Realtime --> Dashboard
+```
+
+Keep transaction processing close to the primary database region. Use caching for public presentation while keeping prices, permissions, inventory, and transaction eligibility authoritative at the API.
+
+**5. Build tenant isolation as a complete subsystem**
+
+Proposed requirements:
+
+- Every tenant resource has immutable ownership.
+- Every tenant database operation executes through a tenant-aware transaction.
+- Staff identity, customer identity, and system job identity are distinct.
+- Membership is verified before selecting an organization.
+- A browser may request an organization switch; the server validates it.
+- Database access uses restricted runtime roles.
+- Migration credentials are separate from application credentials.
+- Tenant context is set transaction-locally on the same connection used for queries.
+- Context is absent by default and fails closed.
+- Related tenant records use composite foreign keys.
+- Sensitive columns are excluded from public responses.
+- Support access uses a dedicated audited authorization path.
+
+The transaction wrapper should conceptually perform:
+
+```text
+Authenticate actor
+→ Resolve requested organization
+→ Verify active membership or customer scope
+→ Authorize operation
+→ Begin database transaction
+→ Establish transaction-local context
+→ Execute tenant-scoped queries
+→ Write audit/outbox records where necessary
+→ Commit
+```
+
+Treat the database session variable as **trusted backend context**, not as an independent cryptographic identity mechanism. Do not expose an API that lets clients arbitrarily set it.
+
+For composite ownership:
+
+```text
+orders:
+  UNIQUE (organization_id, id)
+
+order_items:
+  FOREIGN KEY (organization_id, order_id)
+  REFERENCES orders (organization_id, id)
+```
+
+Apply the same ownership approach to product variants, refunds, customer addresses, booking resources, and attachments.
+
+The isolation test matrix must include:
+
+| Boundary | Required negative test |
+|---|---|
+| Database | Tenant A cannot read or mutate Tenant B’s private records |
+| Foreign keys | A cannot attach a B resource to an A record |
+| API | Guessed IDs do not bypass ownership |
+| Cache | A’s cached output never appears under B’s host |
+| Search | Private search cannot return another tenant’s results |
+| Storage | A cannot upload to or download B’s private objects |
+| Realtime | A cannot subscribe to B’s operational events |
+| Jobs | Altered job metadata cannot redirect work into B |
+| AI | Tools cannot act on another organization |
+| Support | Tenant users cannot reach platform support capabilities |
+
+Test with the actual runtime database roles and connection pooling configuration. PostgreSQL’s default-deny behavior and bypass rules must be accounted for in that test setup. ([postgresql.org](https://www.postgresql.org/docs/current/ddl-rowsecurity.html?utm_source=openai))
+
+**6. Separate tenant status, billing, publication, and entitlements**
+
+Use independent state models:
+
+| Dimension | Example states |
+|---|---|
+| Onboarding | submitted, reviewing, awaiting_assets, preparing, awaiting_approval, complete |
+| Site publication | unpublished, published, maintenance, archived |
+| Subscription | trialing, active, past_due, canceled, incomplete |
+| Account access | normal, restricted, suspended, deletion_pending, deleted |
+| Payment connection | disconnected, onboarding, enabled, restricted |
+| Module entitlement | unavailable, enabled, exhausted, temporarily_disabled |
+
+Derive effective permissions from these dimensions.
+
+Proposed billing behavior:
+
+| Condition | Public site | New transactions | Existing obligations | Dashboard |
+|---|---|---|---|---|
+| Trial/active | Live | Enabled when merchant payments are ready | Fully manageable | Full permitted access |
+| Past due, within grace | Live | Enabled by grace policy | Fully manageable | Warning and billing actions |
+| Grace expired | Catalog remains live | Disabled at API | Fulfillment/refund access preserved | Restricted operations, read access, export, billing |
+| Canceled at term end | Live through agreed period | Enabled until term end | Manageable | Full access until term end |
+| Canceled after term | According to hosting policy | Disabled | Time-limited operational access | Read/export/account closure |
+| Security suspension | Depends on incident | Disabled | Controlled recovery access | Incident-specific restrictions |
+| Deletion pending | Disabled or archived | Disabled | Retention review | Closure/export status only |
+
+Do not allow a late subscription event to reactivate a security-suspended tenant. Billing recovery changes billing entitlements; it does not erase administrative restrictions.
+
+Define scheduled jobs for trial reminders, trial expiration, grace expiration, hosting expiration, and deletion eligibility. These must be idempotent.
+
+**7. Implement the assisted client intake and delivery system**
+
+This is a major missing product module. Your platform needs to manage the work of preparing a client site, not only the finished site.
+
+Add:
+
+- Intake questionnaires.
+- Requirement documents and versions.
+- Asset checklists.
+- Supported-feature mapping.
+- Unanswered questions.
+- Preparation tasks.
+- Client preview links.
+- Revision requests.
+- Approval records.
+- Handoff records.
+- Post-launch change requests.
+
+Proposed workflow:
+
+```text
+Client submits brief and assets
+→ System checks completeness
+→ AI extracts structured requirements
+→ Operator reviews feature mapping
+→ Unsupported requests become explicit exceptions
+→ Draft catalog and configuration are prepared
+→ Preview is generated
+→ Client reviews and requests revisions
+→ Approved revision is recorded
+→ Payment/domain readiness is checked
+→ Site is published
+→ Trial begins under agreed policy
+```
+
+Every requirement should map to one of:
+
+| Classification | Action |
+|---|---|
+| Supported configuration | Configure existing capability |
+| Supported integration | Connect a vetted provider |
+| New reusable capability | Create a development ticket |
+| Unsupported request | Explain limitation or alternative |
+| Ambiguous request | Obtain clarification |
+
+Never silently replace a requested workflow with a vaguely similar module.
+
+**8. Turn the JSON system into a versioned capability system**
+
+Keep tenant configuration separate from operational data.
+
+Configuration can contain:
+
+- Theme and typography tokens.
+- Page sections and navigation.
+- Enabled modules and module settings.
+- Booking policies.
+- Delivery settings.
+- Notification preferences.
+- SEO content references.
+- Supported custom field definitions.
+
+Products, customers, orders, messages, inventory movements, and payments remain in their domain tables.
+
+Illustrative configuration:
+
+```json
+{
+  "schema_version": 1,
+  "template": {
+    "id": "boutique",
+    "version": 1
+  },
+  "brand": {
+    "primary_color": "#734B36",
+    "heading_font": "Inter",
+    "body_font": "Inter"
+  },
+  "pages": [
+    {
+      "path": "/",
+      "sections": [
+        {
+          "type": "hero",
+          "version": 1,
+          "props": {
+            "heading": "Made for your celebrations",
+            "image_asset_id": "asset_123"
+          }
+        },
+        {
+          "type": "featured_catalog",
+          "version": 1,
+          "props": {
+            "collection_id": "collection_123"
+          }
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "retail": {
+      "version": 1,
+      "enabled": true,
+      "settings": {
+        "pickup_enabled": true
+      }
+    },
+    "bookings": {
+      "version": 1,
+      "enabled": true,
+      "settings": {
+        "buffer_minutes": 30,
+        "deposit_minor_units": "5000",
+        "currency": "USD"
+      }
+    }
+  }
+}
+```
+
+The IDs here are illustrative. Validation must check their existence and ownership.
+
+Each capability needs a manifest:
+
+```text
+Capability identifier and version
+Configuration schema
+Required dependencies
+Permissions
+API commands and queries
+UI components
+Events
+Background jobs
+Export/deletion behavior
+Usage limits
+Failure and recovery behavior
+Compatibility rules
+```
+
+Add these publishing safeguards:
+
+- Immutable release snapshots.
+- An explicit active release pointer.
+- Expected-version checks for concurrent edits.
+- Client approval attached to a specific release hash.
+- Validation of links, assets, modules, and dependencies.
+- Preview authentication and expiration.
+- Preview `noindex`.
+- Tenant-by-tenant capability rollout.
+- Emergency capability disablement.
+- Rollback compatibility checks.
+
+A theme rollback restores presentation configuration. It must not reverse completed purchases or other irreversible business effects.
+
+**9. Complete the storefront and domain subsystem**
+
+Recommended improvements:
+
+1. Normalize hostnames consistently.
+2. Resolve verified domains by exact match.
+3. Reserve platform hostnames such as `admin`, `api`, and `app`.
+4. Define slug reservation expiry.
+5. Quarantine released slugs before reuse.
+6. Enforce one primary active domain per site.
+7. Keep domain verification separate from certificate readiness.
+8. Recheck ownership where required by the domain lifecycle.
+9. Track provisioning errors and retry attempts.
+10. Redirect secondary domains to the primary domain.
+11. Preserve product URL redirects after slug changes.
+12. Separate private previews from public releases.
+13. Include tenant, release, locale, and currency in relevant cache keys.
+14. Never cache customer account pages publicly.
+15. Verify domain routing independently on transaction endpoints.
+16. Define custom domain removal and transfer workflows.
+17. Add synthetic checks for certificates and routing.
+18. Establish a bounded public-content freshness policy.
+
+Do not use `hostname.includes(rootDomain)` as the routing rule shown in the exports. Use exact root-domain comparison or a validated subdomain suffix boundary, followed by domain-record lookup.
+
+For caching, define which layer owns each cache entry and how it is invalidated. Next.js documents additional coordination requirements for multiple self-hosted instances, including shared cache state and tag invalidation. ([nextjs.org](https://nextjs.org/docs/app/guides/self-hosting?utm_source=openai))
+
+Keep entitlement checks out of eventually consistent presentation configuration. Cloudflare KV’s propagation behavior makes it unsuitable as the sole authority for immediate transaction restrictions. ([developers.cloudflare.com](https://developers.cloudflare.com/kv/api/write-key-value-pairs/?utm_source=openai))
+
+**10. Implement a shared catalog with complete business extensions**
+
+The shared catalog should support:
+
+| Business mode | Additional behavior |
+|---|---|
+| Retail | Variants, stock, shipping, returns |
+| Food | Modifiers, preparation times, ordering hours, capacity |
+| Services | Service descriptions, pricing, inquiry or purchase |
+| Bookings | Duration, staff, resources, availability, deposits |
+| Quotes | Request specifications, revisions, expiry, acceptance |
+| Digital products | Private delivery, download entitlements, limits |
+
+Add:
+
+- Draft-by-default products.
+- Multiple collections and categories.
+- Variant option combinations.
+- Media ordering and alt text.
+- SKU uniqueness within the intended scope.
+- Bulk edit with preview.
+- Price schedules.
+- Tax category references.
+- Availability windows.
+- Archive behavior.
+- Historical order item snapshots.
+- Custom fields with restricted types.
+- Quantity and measurement units.
+- Import provenance.
+- Public/private catalog distinctions.
+- Wholesale customer groups where supported.
+
+Historical orders must retain the purchased title, options, price, tax, and fulfillment information even if the live product changes.
+
+Imports should validate file type and size before expensive parsing or scanning, then process untrusted content in an isolated worker. Store source locations and validation results so the merchant can compare extracted values with the original.
+
+For an import rollback, revert only records that still match the imported revision. If someone edited or sold an imported product afterward, generate a conflict report rather than deleting it blindly.
+
+**11. Engineer checkout as a recoverable transaction workflow**
+
+Proposed sequence:
+
+```text
+Resolve site and customer/cart scope
+→ Check current transaction entitlement
+→ Validate cart
+→ Calculate authoritative prices, discounts, tax, and delivery
+→ Create checkout/order snapshot
+→ Reserve stock or capacity
+→ Persist payment creation operation
+→ Request provider payment session
+→ Store provider reference
+→ Customer pays
+→ Verified webhook records payment outcome
+→ Worker confirms order and consumes reservation
+→ Outbox triggers fulfillment notifications
+```
+
+Do not hold a database transaction open during a payment-provider network call.
+
+Persist the operation before calling the provider. If the request times out, use the same provider idempotency key and reconcile the existing operation.
+
+Separate states:
+
+| Aggregate | Proposed states |
+|---|---|
+| Order | draft, submitted, accepted, canceled, completed |
+| Payment | pending, requires_action, authorized, captured, failed |
+| Fulfillment | unfulfilled, partial, ready, shipped, delivered |
+| Refund | requested, processing, succeeded, failed |
+| Return | requested, approved, received, rejected |
+| Dispute | open, evidence_submitted, won, lost |
+
+Required edge cases:
+
+- Double-clicked checkout.
+- Identical retries.
+- Same idempotency key with different payload.
+- Provider timeout after successful creation.
+- Payment success after reservation expiry.
+- Merchant rejection after payment.
+- Partial fulfillment.
+- Partial refund.
+- Concurrent refunds.
+- Discount quota contention.
+- Tax quote expiration.
+- Asynchronous payment methods.
+- Subscription restriction during an in-progress checkout.
+
+For money, use integer minor units and explicit currency metadata. Define rounding and proportional allocation rules. Serialize large integer amounts safely—for example as decimal strings in API contracts.
+
+**12. Separate merchant payments from your subscription billing**
+
+Your system has two financial flows:
+
+```text
+Merchant → Platform
+Monthly software/management subscription
+
+Shopper → Merchant
+Payment for goods, appointments, or services
+```
+
+Add a merchant payment connection module. Use provider onboarding rather than asking clients to paste secret keys into intake forms. Stripe supports account-link onboarding flows and connected-account API scoping. ([docs.stripe.com](https://docs.stripe.com/api/account_links/create?event_types-invoice.payment_succeeded=&utm_source=openai))
+
+Before implementation, record:
+
+- Which entity sells the goods.
+- Which account receives payment.
+- Which charge model is used.
+- Responsibility for fees, refunds, disputes, and negative balances.
+- Supported merchant countries and payment methods.
+- Payout visibility and support responsibilities.
+
+Direct charges do not automatically remove all platform financial exposure; liability depends on the connected-account configuration. Stripe documents cases where a platform remains responsible for account losses. ([support.stripe.com](https://support.stripe.com/questions/reserves-for-connect-platforms-and-connected-accounts?utm_source=openai))
+
+The webhook subsystem should:
+
+1. Verify signatures using the unmodified raw body.
+2. Validate provider account and environment.
+3. Persist the verified event durably.
+4. Deduplicate using provider, account, and event identity.
+5. Commit receipt and dispatch intent.
+6. Return success promptly.
+7. Process asynchronously.
+8. Handle duplicate and out-of-order delivery.
+9. Fetch current provider state when needed.
+10. Reconcile missing events and unresolved operations.
+
+Stripe’s documentation supports raw-body verification, prompt acknowledgment, and asynchronous processing. ([docs.stripe.com](https://docs.stripe.com/webhooks))
+
+The inbox and outbox are essential to close the gap between “saved in PostgreSQL” and “sent to the queue.” Make the database record the recoverable source of work.
+
+**13. Build inventory and bookings before their transaction flows**
+
+Inventory should include:
+
+- On-hand quantity.
+- Reserved quantity.
+- Available-to-sell quantity.
+- Multiple locations.
+- Adjustments with reasons.
+- Reservation expiry.
+- Transfer workflow.
+- Return inspection.
+- Optional backorder policy.
+- Movement history and reconciliation.
+
+Use atomic updates or locks that enforce availability at the database boundary. Test concurrent purchase attempts against the same limited stock.
+
+Bookings should include:
+
+- IANA business timezone.
+- Staff and resource calendars.
+- Availability rules and exceptions.
+- Buffers.
+- Capacity.
+- Temporary booking holds.
+- Deposits.
+- Cancellation and rescheduling.
+- Reminder scheduling.
+- No-shows.
+- Waitlists.
+- Calendar integration conflict handling.
+
+Store appointment instants separately from local recurring availability rules.
+
+Test daylight-saving gaps and repeated times, simultaneous slot claims, staff leave, changed duration, and payment completing after a hold expires.
+
+Food ordering also needs operational capacity: preparation queues, ordering cutoffs, scheduled orders, temporary closure, modifier validation, and unavailable-item handling. A retail catalog alone does not provide these workflows.
+
+**14. Complete the unified inbox and automation modules**
+
+Build the inbox around a durable conversation model:
+
+- Channel connection.
+- Tenant-owned sender identity.
+- Conversation participants.
+- Incoming and outgoing messages.
+- Delivery attempts.
+- Provider message IDs.
+- Attachments.
+- Assignment.
+- Read/unread state.
+- Internal notes.
+- Tags.
+- Customer associations.
+- Consent and suppression.
+- Failed-send recovery.
+
+Recommended initial channel order: website inquiries, transactional email, supported email replies, then WhatsApp/SMS integrations with provider-specific requirements documented before activation.
+
+Treat duplicate inbound webhooks safely. Do not merge customers from matching phone numbers alone without a defined identity policy.
+
+Automation should use a restricted structure:
+
+```text
+Trigger → Conditions → Approved actions
+```
+
+Example:
+
+```text
+Order becomes ready
+→ Customer opted into the selected channel
+→ Send ready-for-pickup notification
+```
+
+Add execution histories, rate limits, loop prevention, dry runs, scheduling rules, and an emergency disable control. Unsupported integrations should fail visibly instead of disappearing silently.
+
+**15. Make realtime an update mechanism with recovery**
+
+My recommendation is to broadcast minimal committed domain events:
+
+```json
+{
+  "event_id": "evt_123",
+  "resource_type": "order",
+  "resource_id": "order_123",
+  "resource_version": 8,
+  "event_type": "order.updated"
+}
+```
+
+The dashboard refetches the authorized resource.
+
+Add:
+
+- Authorization for each stream.
+- Session expiry handling.
+- Membership revocation.
+- Reconnection backoff.
+- Duplicate event handling.
+- Version checks.
+- Missed-event recovery.
+- Full refetch fallback.
+- Connection quotas.
+- Minimal event payloads.
+
+A disconnected dashboard must recover the correct order state when it reconnects. A realtime notification should not be the only record that an order exists.
+
+**16. Constrain AI through server policy**
+
+Maintain two separate AI workflows:
+
+| Workflow | Access |
+|---|---|
+| Development agents | Repository, local/test environments, scoped engineering tasks |
+| Product AI | Approved application tools under the current user’s permissions |
+
+Product AI must not receive deployment credentials, arbitrary SQL access, unrestricted file access, or authority to modify its own permissions.
+
+Replace model-controlled approval flags with:
+
+```text
+Model proposes action
+→ Strict tool schema validates
+→ Server supplies actor and tenant identity
+→ Authorization checks permissions
+→ Policy classifies risk
+→ Preview is stored with resource versions
+→ Required user approves exact proposal
+→ Executor rechecks authorization and versions
+→ Domain service executes idempotently
+→ Result and audit record are stored
+```
+
+Add:
+
+- Prompt-injection tests for uploaded requirements and messages.
+- Tool execution budgets.
+- Tenant usage limits.
+- Model/provider version tracking.
+- Source evidence for extracted values.
+- Sensitive-data minimization.
+- Redacted logs.
+- Approval expiry.
+- Approval tied to proposal hash.
+- Permission recheck at execution.
+- Changed-resource conflict detection.
+- Evaluation datasets for imports and tool actions.
+- A non-AI fallback for every essential workflow.
+
+Do not promise that all actions are reversible. A refund or sent message needs an explicit compensating or follow-up procedure.
+
+**17. Add complete usability and mobile requirements**
+
+Every screen should include applicable loading, empty, validation, permission-denied, provider-failure, and retry states.
+
+Add:
+
+- Keyboard-operable navigation.
+- Accessible dialogs and forms.
+- Visible focus states.
+- Screen-reader labels.
+- Contrast validation for theme choices.
+- Reduced-motion support.
+- Mobile tables or equivalent layouts.
+- Safe bulk actions.
+- Confirmation for destructive actions.
+- Unsaved-change handling.
+- Clear transaction status.
+- Accessible authentication.
+- Client review on mobile and desktop.
+
+I recommend WCAG 2.2 AA as the accessibility target, with automated checks plus manual keyboard and assistive-technology verification. W3C’s WCAG 2.2 provides the relevant success criteria. ([w3.org](https://www.w3.org/TR/wcag/?utm_source=openai))
+
+Define “app” explicitly. My proposed full-release scope includes an installable web experience for storefront and merchant operations. Native merchant apps should have a separate distribution, ownership, release, and maintenance workstream if they are required.
+
+For offline behavior, cache safe public content and show connectivity status. Require authoritative online confirmation for purchases, refunds, inventory adjustments, and bookings.
+
+**18. Make production readiness measurable**
+
+Adopt numerical goals only with an accompanying measurement definition.
+
+Proposed targets to validate:
+
+| Concern | Proposed acceptance target |
+|---|---|
+| Public storefront availability | 99.95% monthly |
+| Dashboard/API availability | 99.9% monthly |
+| Internal webhook processing | 99% within 60 seconds of durable receipt |
+| Operational realtime update | p95 within 3 seconds of commit |
+| Recovery point | Within 15 minutes for the defined disaster scenario |
+| Recovery time | Within 2 hours for that scenario |
+| Critical tenant isolation | No unauthorized access in the release test matrix |
+| Payment reconciliation | No unexplained financial mismatches at release |
+| Public-page performance | Agreed mobile budgets tested under defined network conditions |
+
+Separate card declines from technical payment-processing failures. Report provider-caused outages separately, but retain an end-to-end customer experience measure.
+
+Add:
+
+- Error-budget policy.
+- Synthetic storefront and checkout checks.
+- Queue-age alerts.
+- Payment reconciliation alerts.
+- Certificate alerts.
+- Backup freshness alerts.
+- Worker crash recovery.
+- Graceful shutdown.
+- Provider timeouts and circuit breakers.
+- Tenant quotas and fair scheduling.
+- Cost anomaly alerts.
+- Resource saturation monitoring.
+
+For capacity, define a workload profile:
+
+```text
+Tenant count
+Catalog size distribution
+Peak uncached requests/second
+Peak checkout attempts/second
+Concurrent dashboard users
+Concurrent realtime connections
+Import volume
+Message volume
+Largest tenant share of traffic
+```
+
+Load-test this profile and increase quotas only after evidence supports it.
+
+**19. Implement recovery, export, and deletion as first-class workflows**
+
+Recovery must cover more than PostgreSQL:
+
+- Database point-in-time recovery.
+- Object storage and versions.
+- Infrastructure configuration.
+- Secrets and key access.
+- Active releases.
+- Domain mappings.
+- Queue reconstruction.
+- Search rebuilding.
+- External provider reconciliation.
+- Previously completed financial operations.
+- Deleted-data suppression after restoring old backups.
+
+A restore must not cause a second refund, receipt, or shipment.
+
+Exports should contain a versioned manifest, stable identifiers, relationships, documented formats, and media checksums. Generate exports from a consistent snapshot or documented watermark.
+
+Deletion should:
+
+```text
+Authenticate and confirm request
+→ Freeze new activity
+→ Check operational obligations and retention rules
+→ Disable access and integrations
+→ Mark deletion generation
+→ Cancel/neutralize pending work
+→ Delete or anonymize eligible records
+→ Delete private files and derived indexes
+→ Remove domain mappings
+→ Record completion
+→ Prevent stale jobs or restored backups from recreating deleted data
+```
+
+Use specific retention schedules for raw uploads, AI prompts, messages, webhook payloads, exports, audit records, and financial records. The legal requirements need to be resolved for the actual operating regions and payment model; a CSV export button alone is not evidence of legal compliance.
+
+**20. Build deployment and security verification that actually runs**
+
+Proposed pull-request gates:
+
+- Formatting, lint, and type checks.
+- Unit tests for domain invariants.
+- Real-database integration tests.
+- Runtime-role RLS tests.
+- API authorization tests.
+- Migration compatibility checks.
+- Secret and dependency scans.
+- Container build and scan.
+- Preview deployment.
+- Critical browser flows.
+- Relevant storage/realtime isolation checks.
+
+Proposed release gates:
+
+- Full cross-tenant matrix.
+- Payment retry and reconciliation scenarios.
+- Inventory/booking contention tests.
+- Authenticated security scans.
+- Accessibility verification.
+- Load tests.
+- Provider failure tests.
+- Restore drill.
+- Deployment rollback drill.
+- Independent security review for critical boundaries.
+- Documented known limitations.
+
+Strix can be one security tool in this program, but the command examples in the exports should not be copied unchanged. Its current official repository uses `-n/--non-interactive` for headless execution. Pin the tested tool version and define how findings become verified release blockers. ([github.com](https://github.com/usestrix/strix?ref=aimorsels&utm_source=openai))
+
+The deployment sequence should be concrete:
+
+```text
+Build artifact
+→ Scan and record digest
+→ Deploy same artifact to staging
+→ Apply compatible migration
+→ Run acceptance checks
+→ Promote artifact
+→ Deploy production canary
+→ Verify health and transaction signals
+→ Roll out progressively
+→ Monitor
+```
+
+Database migrations should use expansion, backfill, transition, and later contraction. Rollback must distinguish code rollback from data recovery.
+
+**21. Execute the full project through dependency-based work packages**
+
+The original sequence delays inventory and payments until after checkout and delays operational tooling until after the workflows it must support. I recommend the following order.
+
+| Work package | Deliverables | Dependencies | Acceptance evidence |
+|---|---|---|---|
+| A. Product contracts | Capability matrix, commercial rules, role matrix, journeys, state transitions, regional decisions | None | No unresolved rule blocks core workflows |
+| B. Engineering platform | Repository, pinned tools, environments, CI, containers, secrets, tracing, migrations | A | Fresh environment deploys reproducibly |
+| C. Identity and isolation | Login, MFA, memberships, tenant transactions, RLS, staff permissions, audits | B | Runtime-role isolation and revocation tests pass |
+| D. Event and job foundation | Inbox, outbox, dispatcher, retries, dead letters, idempotency, operator controls | C | Crash and duplicate-processing tests pass |
+| E. Assisted setup | Intake, requirement mapping, assets, tasks, preview review, revisions, acceptance | C–D | Client brief reaches approved preparation state |
+| F. Site runtime | Domain routing, templates, configuration, releases, publishing, rollback, SEO | C–E | Two clients publish independently without code generation |
+| G. Catalog and customers | Products, variants, media, imports, customer accounts, search, exports | C–F | Catalog and private customer scope verified |
+| H. Inventory and commerce | Reservations, pricing, cart, checkout operation model, orders, fulfillment | D–G | Concurrent stock and retry scenarios pass |
+| I. Payments and billing | Merchant connection, payments, refunds, subscriptions, entitlements, reconciliation | D–H | Provider timeout, duplicate, restriction, and recovery scenarios pass |
+| J. Business capabilities | Food ordering, bookings, quotes, wholesale, promotions, digital delivery | G–I | Each capability has complete operational tests |
+| K. Inbox and automation | Channels, conversations, assignments, notifications, automation histories | D, G, I | Duplicate ingress and failed delivery recover safely |
+| L. AI workflows | Requirements extraction, catalog parsing, tool registry, approvals, evaluations, budgets | E–K | Unauthorized/stale proposals cannot execute |
+| M. Analytics and admin | Defined metrics, support tools, access grants, usage, reconciliation dashboards | D–L | Metrics reconcile and support actions are audited |
+| N. Recovery and launch | Restore/deletion drills, security review, load testing, runbooks, controlled cohort | All relevant packages | Signed release evidence for the full scope |
+
+Build the operational UI alongside each domain package. For example, the order API, order dashboard, fulfillment controls, audit history, and recovery tests belong in the same work package.
+
+For every capability, require:
+
+```text
+Requirements
+Data model
+Permissions
+Configuration
+API
+Storefront flow
+Dashboard flow
+Jobs and events
+Notifications
+Export/deletion
+Failure handling
+Tests
+Documentation
+Operational ownership
+```
+
+A feature is complete when that set is complete.
+
+**22. Use your AI tools with clear task ownership**
+
+My recommended workflow uses Lovable for visual exploration and presentation components, with Claude Code and Antigravity assigned scoped engineering and verification tasks. These are workflow assignments, not guarantees that a particular tool will produce correct code.
+
+Use one authoritative Git repository. Agents work in isolated branches or worktrees, and only one agent owns a given file area at a time.
+
+Create these project documents before broad implementation:
+
+```text
+PRODUCT.md
+ARCHITECTURE.md
+AGENTS.md
+DOMAIN_INVARIANTS.md
+PERMISSIONS.md
+STATE_MACHINES.md
+API_CONTRACTS.md
+TEST_MATRIX.md
+RELEASE_GATES.md
+```
+
+Use this task contract:
+
+```text
+Task identifier:
+User outcome:
+Requirement identifiers:
+Dependencies:
+Allowed file areas:
+API/schema contracts:
+Permissions:
+Domain invariants:
+Failure cases:
+Required verification:
+Acceptance criteria:
+Evidence to return:
+```
+
+Example:
+
+```text
+Task: INV-014 — Reserve inventory for checkout
+
+Outcome:
+A checkout can reserve stock without overselling.
+
+Dependencies:
+Tenant transaction wrapper, inventory levels, idempotency service.
+
+Invariants:
+Reservation belongs to the checkout tenant.
+Available stock never becomes negative unless backorders are enabled.
+Repeated requests do not create a second reservation.
+Expired reservations can be released safely.
+
+Required verification:
+Concurrent buyers competing for one item.
+Retry after worker interruption.
+Cross-tenant variant reference.
+Same idempotency key with changed payload.
+
+Evidence:
+Migration, implementation, test results, and recovery procedure.
+```
+
+A second agent should inspect critical changes against the requirements and tests. A qualified independent reviewer should examine authorization, payment boundaries, and deployment privileges before accepting production risk.
+
+Do not let an agent achieve green tests by weakening assertions, skipping suites, broadening permissions, or replacing required behavior with mocks.
+
+For Lovable imports, require typed props and real empty/error states. Adapt routing and data access to the authoritative application contracts before integration. Keep domain decisions in shared services rather than embedding them in visual components.
+
+**23. Plan time and staffing around verification effort**
+
+I would not use the supplied ten-week estimate for the entire stated scope.
+
+For budgeting, my provisional estimate is:
+
+| Delivery arrangement | Planning range for the complete scope |
+|---|---|
+| Experienced small team using agents, managed infrastructure, parallel workstreams | Approximately 6–12 months |
+| Solo operator using agents, with periodic specialist review | Approximately 12–24 months or longer |
+
+These are judgment-based ranges. They should be recalculated after the first two completed work packages using actual throughput, defect rate, integration effort, and provider onboarding time.
+
+You need named ownership for product decisions, architecture, security, financial reconciliation, support, and incident response. AI agents can assist each area, but the platform still needs someone accountable for real operational outcomes.
+
+**24. Use a release evidence register**
+
+Replace the final checklist of unchecked promises with evidence attached to each requirement.
+
+| Requirement | Required release evidence |
+|---|---|
+| Tenant isolation | Database/API/storage/cache/realtime negative test results |
+| Reliable payments | Retry tests, provider references, reconciliation report |
+| No overselling | Concurrent reservation tests |
+| No double bookings | Concurrent claims and timezone boundary tests |
+| Safe publishing | Version-conflict, preview, rollback, cache tests |
+| Safe AI execution | Unauthorized-tool and stale-approval test results |
+| Cancellation | End-to-end cancellation and entitlement evidence |
+| Portability | Export completeness and relationship validation |
+| Deletion | Completed deletion drill and stale-job test |
+| Disaster recovery | Timed restore and post-restore provider reconciliation |
+| Deployability | Fresh infrastructure deployment and artifact promotion |
+| Rollback | Demonstrated production-like rollback |
+| Usability | Merchant acceptance, accessibility, mobile verification |
+| Operations | Exercised alerts, runbooks, escalation, and support tools |
+
+**The next concrete deliverable should be a versioned master specification and executable backlog built from this plan.** Start with the capability matrix, separate state machines, payment ownership decision, permission matrix, and acceptance tests. Those decisions let your agents implement the full platform consistently, and the evidence register gives you a defensible basis for calling the finished application production-ready.

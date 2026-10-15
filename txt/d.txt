@@ -1,0 +1,2844 @@
+1. Product Definition 
+
+Build the platform as a multi-tenant commerce operating system, not merely a website generator. 
+
+Each tenant receives: 
+
+A public storefront. 
+
+A private operations dashboard. 
+
+A configurable business data model. 
+
+A branded subdomain. 
+
+Optional custom-domain support. 
+
+Catalog, ordering, customer, inventory, payments, analytics, and automation tools. 
+
+AI assistance constrained by tenant-level configuration and approved modules. 
+
+A 30-day trial followed by recurring management billing. 
+
+The core product principle should be: 
+
+Users should be able to run their daily business without needing to understand the underlying platform. 
+
+Avoid presenting users with technical concepts such as JSON, schemas, deployments, prompts, tenants, or generated code. Those belong in the platform-admin layer. 
+
+ 
+
+2. Recommended Product Structure 
+
+2.1 Three Applications 
+
+Use one shared codebase with three logical applications. 
+
+A. Marketing Website 
+
+Purpose: 
+
+Explain the platform. 
+
+Show examples. 
+
+Let prospects start onboarding. 
+
+Present pricing and trial terms. 
+
+Display supported business types. 
+
+Handle support, legal, and trust information. 
+
+Routes: 
+
+/ 
+
+ /solutions/retail 
+
+ /solutions/restaurants 
+
+ /solutions/services 
+
+ /solutions/bookings 
+
+ /templates 
+
+ /pricing 
+
+ /security 
+
+ /help 
+
+ /login 
+
+ /start 
+
+B. Tenant Storefront 
+
+Public customer-facing website. 
+
+Examples: 
+
+brand.yourplatform.com 
+
+shop.brand.com 
+
+Responsibilities: 
+
+Render tenant branding. 
+
+Display products or services. 
+
+Accept orders, bookings, inquiries, or payments. 
+
+Handle customer authentication where needed. 
+
+Generate receipts. 
+
+Support mobile browsing. 
+
+Provide SEO metadata. 
+
+Support promotions, coupons, and abandoned-cart recovery. 
+
+C. Tenant Dashboard 
+
+Private business-management application. 
+
+Responsibilities: 
+
+Onboarding. 
+
+Store configuration. 
+
+Product and service management. 
+
+Orders. 
+
+Customers. 
+
+Inventory. 
+
+Bookings. 
+
+Payments. 
+
+Marketing. 
+
+Analytics. 
+
+Staff permissions. 
+
+Billing. 
+
+Data exports. 
+
+AI assistant. 
+
+ 
+
+3. Critical Product Decisions 
+
+3.1 Do Not Start With Arbitrary AI-Generated Code 
+
+The proposed “vibe coding” layer should not initially generate unrestricted production code. 
+
+Instead, use this hierarchy: 
+
+Natural-language request 
+
+        ↓ 
+
+Intent classification 
+
+        ↓ 
+
+Structured feature configuration 
+
+        ↓ 
+
+Approved component/module 
+
+        ↓ 
+
+Preview environment 
+
+        ↓ 
+
+Automated tests 
+
+        ↓ 
+
+Tenant release 
+
+Example: 
+
+{ 
+
+  "feature": "booking", 
+
+  "enabled": true, 
+
+  "appointment_duration_minutes": 45, 
+
+  "buffer_minutes": 15, 
+
+  "require_deposit": true, 
+
+  "deposit_minor_units": 2000, 
+
+  "currency": "USD" 
+
+} 
+
+This is safer, easier to test, easier to roll back, and more scalable than allowing generated code to modify the core runtime. 
+
+Arbitrary custom code can become a later enterprise feature with: 
+
+Sandboxed execution. 
+
+Strict API permissions. 
+
+CPU and memory limits. 
+
+Network egress restrictions. 
+
+Dependency scanning. 
+
+Human approval. 
+
+Versioned releases. 
+
+Automatic rollback. 
+
+3.2 Make the Dashboard Role-Aware 
+
+Do not show every feature to every user. 
+
+Recommended roles: 
+
+Owner 
+
+Administrator 
+
+Manager 
+
+Sales Staff 
+
+Fulfillment Staff 
+
+Inventory Staff 
+
+Finance Staff 
+
+Marketing Staff 
+
+Read-only Analyst 
+
+Platform Support 
+
+Platform Administrator 
+
+Each role should receive a focused navigation menu. 
+
+For example, fulfillment staff should not see billing settings or staff permissions. 
+
+3.3 Treat Trial Conversion as a Billing State Machine 
+
+Do not implement Day 31 as a single scheduled job. 
+
+Use explicit states: 
+
+trialing 
+
+trial_expiring 
+
+payment_required 
+
+active 
+
+past_due 
+
+grace_period 
+
+restricted 
+
+canceled 
+
+suspended 
+
+closed 
+
+Every billing transition should be driven by verified payment-provider webhooks and recorded in an immutable billing event log. 
+
+Stripe supports trial subscriptions and trial-ending behavior through its billing system, but the platform should still maintain its own synchronized subscription state. (docs.stripe.com) 
+
+ 
+
+4. MVP Scope 
+
+The first release should focus on businesses that can be represented by products, services, orders, or appointments. 
+
+4.1 Supported Business Modes 
+
+Launch with these modes: 
+
+Retail catalog. 
+
+Food and beverage ordering. 
+
+Service business. 
+
+Appointment booking. 
+
+Quote and inquiry collection. 
+
+Do not support every conceivable business process in the first release. Instead, model business capabilities as modules. 
+
+catalog 
+
+orders 
+
+payments 
+
+inventory 
+
+customers 
+
+bookings 
+
+quotes 
+
+reviews 
+
+promotions 
+
+staff 
+
+analytics 
+
+4.2 MVP Features 
+
+Onboarding 
+
+Email or social login. 
+
+Business type selection. 
+
+Business name and location. 
+
+Logo and brand asset upload. 
+
+Template selection. 
+
+Color and typography choices. 
+
+Product or service import. 
+
+Payment setup. 
+
+Trial terms. 
+
+Preview and publish. 
+
+Storefront 
+
+Home page. 
+
+Product/service listing. 
+
+Category navigation. 
+
+Product details. 
+
+Cart. 
+
+Checkout. 
+
+Contact page. 
+
+Business hours. 
+
+Policies. 
+
+Order confirmation. 
+
+Responsive layout. 
+
+SEO metadata. 
+
+Branded subdomain. 
+
+Dashboard 
+
+Overview. 
+
+Orders. 
+
+Products/services. 
+
+Customers. 
+
+Inventory basics. 
+
+Store appearance. 
+
+Business settings. 
+
+Billing. 
+
+Staff access. 
+
+CSV export. 
+
+Audit log. 
+
+Platform Administration 
+
+Tenant list. 
+
+Account status. 
+
+Subscription status. 
+
+Domain status. 
+
+Support impersonation with explicit audit logging. 
+
+Usage metrics. 
+
+Failed jobs. 
+
+AI request review. 
+
+Security alerts. 
+
+Billing reconciliation. 
+
+ 
+
+5. Suggested Technical Architecture 
+
+5.1 Application Stack 
+
+A pragmatic initial stack: 
+
+Frontend: Next.js with TypeScript 
+
+UI: Tailwind CSS plus a custom component system 
+
+Backend: Next.js server actions/API routes or separate service layer 
+
+Database: PostgreSQL 
+
+Authentication: Managed authentication provider 
+
+Payments: Stripe 
+
+Object storage: S3-compatible storage 
+
+Queue: Managed queue or Redis-backed worker system 
+
+Search: PostgreSQL full-text search initially 
+
+Analytics: Event pipeline plus warehouse later 
+
+Monitoring: Error tracking, logs, metrics, tracing 
+
+Deployment: Managed container or serverless platform 
+
+Use a monorepo: 
+
+apps/ 
+
+  marketing/ 
+
+  storefront/ 
+
+  dashboard/ 
+
+  admin/ 
+
+ 
+
+packages/ 
+
+  ui/ 
+
+  database/ 
+
+  auth/ 
+
+  billing/ 
+
+  tenant-runtime/ 
+
+  validation/ 
+
+  ai/ 
+
+  events/ 
+
+  email/ 
+
+  storage/ 
+
+  testing/ 
+
+5.2 Request Flow 
+
+Storefront request 
+
+Incoming hostname 
+
+        ↓ 
+
+Edge middleware 
+
+        ↓ 
+
+Resolve domain 
+
+        ↓ 
+
+Resolve tenant 
+
+        ↓ 
+
+Load published configuration 
+
+        ↓ 
+
+Load storefront data 
+
+        ↓ 
+
+Render selected template 
+
+        ↓ 
+
+Cache safe public content 
+
+Dashboard request 
+
+Authenticated request 
+
+        ↓ 
+
+Validate session 
+
+        ↓ 
+
+Resolve active organization 
+
+        ↓ 
+
+Resolve membership and role 
+
+        ↓ 
+
+Query database through tenant-aware access layer 
+
+        ↓ 
+
+Enforce database RLS 
+
+        ↓ 
+
+Return only authorized records 
+
+The application must never trust a tenant_id supplied directly by the browser. Tenant identity should come from the authenticated membership context or a server-resolved hostname. 
+
+ 
+
+6. Multi-Tenant Data Model 
+
+6.1 Core Tables 
+
+organizations 
+
+organization_members 
+
+organization_settings 
+
+organization_features 
+
+organization_domains 
+
+organization_subscriptions 
+
+organization_usage 
+
+organization_audit_events 
+
+6.2 Commerce Tables 
+
+catalogs 
+
+categories 
+
+products 
+
+product_variants 
+
+product_images 
+
+inventory_locations 
+
+inventory_items 
+
+inventory_movements 
+
+orders 
+
+order_items 
+
+order_events 
+
+payments 
+
+refunds 
+
+discounts 
+
+tax_rates 
+
+shipping_profiles 
+
+6.3 Customer Tables 
+
+customers 
+
+customer_addresses 
+
+customer_consents 
+
+customer_notes 
+
+customer_segments 
+
+customer_events 
+
+6.4 Booking Tables 
+
+services 
+
+staff_profiles 
+
+availability_rules 
+
+availability_exceptions 
+
+appointments 
+
+appointment_events 
+
+resources 
+
+6.5 AI Tables 
+
+ai_conversations 
+
+ai_requests 
+
+ai_actions 
+
+ai_action_previews 
+
+ai_action_approvals 
+
+ai_usage 
+
+ai_failure_events 
+
+6.6 Example Organization Schema 
+
+create table organizations ( 
+
+  id uuid primary key default gen_random_uuid(), 
+
+  name text not null, 
+
+  slug text not null unique, 
+
+  business_type text not null, 
+
+  status text not null default 'onboarding', 
+
+  created_at timestamptz not null default now(), 
+
+  updated_at timestamptz not null default now() 
+
+); 
+
+Every tenant-owned table should include: 
+
+organization_id uuid not null references organizations(id) 
+
+Use composite indexes: 
+
+create index orders_organization_created_idx 
+
+on orders (organization_id, created_at desc); 
+
+ 
+
+create index products_organization_status_idx 
+
+on products (organization_id, status); 
+
+6.7 Row-Level Security 
+
+Enable RLS on every exposed tenant table. PostgreSQL uses a default-deny behavior when RLS is enabled without an applicable policy, but table grants and policies must still be designed together. (postgresql.org) 
+
+Conceptual policy: 
+
+create policy "members can read organization orders" 
+
+on orders 
+
+for select 
+
+to authenticated 
+
+using ( 
+
+  organization_id in ( 
+
+    select organization_id 
+
+    from organization_members 
+
+    where user_id = auth.uid() 
+
+      and status = 'active' 
+
+  ) 
+
+); 
+
+For writes, use both: 
+
+using (...) 
+
+with check (...); 
+
+Important controls: 
+
+Never permit clients to update organization_id. 
+
+Restrict column updates where necessary. 
+
+Keep service-role access exclusively server-side. 
+
+Add negative cross-tenant tests for every table. 
+
+Test storage paths separately from table policies. 
+
+Test Realtime subscriptions separately from table queries. 
+
+Prevent support impersonation from bypassing audit logging. 
+
+Supabase documentation specifically recommends enabling RLS on every exposed table, defining policies per operation, and adding automated allow/deny tests. (supabase.com) 
+
+ 
+
+7. Tenant Configuration System 
+
+Store configuration in structured, versioned records. 
+
+7.1 Configuration Categories 
+
+brand_config 
+
+layout_config 
+
+navigation_config 
+
+catalog_config 
+
+checkout_config 
+
+order_config 
+
+booking_config 
+
+notification_config 
+
+seo_config 
+
+feature_flags 
+
+custom_css_tokens 
+
+Example: 
+
+{ 
+
+  "template": "boutique", 
+
+  "theme": { 
+
+    "primary": "#1F4D45", 
+
+    "accent": "#E6A15C", 
+
+    "background": "#F7F3EC", 
+
+    "font_heading": "Cormorant Garamond", 
+
+    "font_body": "DM Sans" 
+
+  }, 
+
+  "navigation": { 
+
+    "items": ["home", "shop", "about", "contact"] 
+
+  } 
+
+} 
+
+7.2 Configuration Requirements 
+
+Every configuration change should support: 
+
+Draft state. 
+
+Preview state. 
+
+Published state. 
+
+Version history. 
+
+Rollback. 
+
+Validation. 
+
+Audit record. 
+
+Change author. 
+
+AI-generated versus manually edited flag. 
+
+Never allow arbitrary JSON to be rendered without schema validation. 
+
+Use versioned schemas: 
+
+theme_config_v1 
+
+theme_config_v2 
+
+checkout_config_v1 
+
+ 
+
+8. Storefront Design System 
+
+The interface should feel simple because complexity is hidden behind progressive disclosure. 
+
+8.1 Template Families 
+
+Launch with four strongly differentiated templates: 
+
+Minimal 
+
+Large product imagery. 
+
+Sparse navigation. 
+
+Strong typography. 
+
+High whitespace. 
+
+Boutique 
+
+Editorial layouts. 
+
+Warm colors. 
+
+Storytelling sections. 
+
+Product collections. 
+
+Modern Grid 
+
+Dense catalog. 
+
+Filters. 
+
+Quick-add. 
+
+High information density. 
+
+Service Studio 
+
+Service cards. 
+
+Availability blocks. 
+
+Testimonials. 
+
+Booking-first flows. 
+
+Each template uses the same underlying content model, allowing tenants to switch designs without migrating data. 
+
+8.2 Style Bar 
+
+The visual editor should expose only high-impact controls: 
+
+Brand color. 
+
+Accent color. 
+
+Background tone. 
+
+Font pairing. 
+
+Button style. 
+
+Corner radius. 
+
+Navigation style. 
+
+Card density. 
+
+Image ratio. 
+
+Avoid exposing dozens of low-level controls in the first experience. 
+
+8.3 Progressive Disclosure 
+
+Use a three-level model: 
+
+Quick setup 
+
+Advanced settings 
+
+Developer/platform settings 
+
+Most customers should remain in Quick setup. 
+
+ 
+
+9. Onboarding Experience 
+
+9.1 Onboarding Principles 
+
+Show one decision per screen. 
+
+Preserve every answer automatically. 
+
+Provide a visible completion indicator. 
+
+Keep a live storefront preview available. 
+
+Offer “skip for now” where safe. 
+
+Use sensible defaults. 
+
+Detect the business type early. 
+
+Explain why payment verification is required. 
+
+Never require technical terminology. 
+
+9.2 Wizard Steps 
+
+Step 1: Business Identity 
+
+Collect: 
+
+Business name. 
+
+Business category. 
+
+Country. 
+
+Currency. 
+
+Time zone. 
+
+Address. 
+
+Contact information. 
+
+Business hours. 
+
+Step 2: Business Goal 
+
+Ask: 
+
+What should customers do on your site? 
+
+Options: 
+
+Buy products. 
+
+Book an appointment. 
+
+Request a quote. 
+
+Contact the business. 
+
+Order for pickup. 
+
+Order for delivery. 
+
+This determines the initial feature configuration. 
+
+Step 3: Visual Direction 
+
+Show full-screen template previews. 
+
+Allow: 
+
+Template selection. 
+
+Color selection. 
+
+Typography selection. 
+
+Logo upload. 
+
+Image upload. 
+
+Step 4: Catalog Import 
+
+Support: 
+
+Manual entry. 
+
+CSV upload. 
+
+Spreadsheet upload. 
+
+PDF upload. 
+
+Image upload. 
+
+Public website import. 
+
+AI-assisted extraction. 
+
+Imported records must enter a review queue before publication. 
+
+Step 5: Operational Setup 
+
+Configure: 
+
+Fulfillment methods. 
+
+Delivery zones. 
+
+Taxes. 
+
+Inventory tracking. 
+
+Booking availability. 
+
+Order notifications. 
+
+Refund policy. 
+
+Customer communication preferences. 
+
+Step 6: Billing Verification 
+
+Collect: 
+
+Payment method. 
+
+Business identity information. 
+
+Consent to trial terms. 
+
+Renewal price. 
+
+Renewal date. 
+
+Cancellation process. 
+
+Avoid describing a payment method as “free” if a verification request or authorization may appear in the bank interface. Make the exact behavior clear. 
+
+Step 7: Preview 
+
+Show: 
+
+Homepage. 
+
+Catalog. 
+
+Checkout. 
+
+Dashboard preview. 
+
+Mobile preview. 
+
+Step 8: Publish 
+
+Provision: 
+
+Subdomain. 
+
+SSL. 
+
+Default transactional email sender. 
+
+Initial analytics. 
+
+Dashboard workspace. 
+
+ 
+
+10. AI Feature Layer 
+
+10.1 AI Assistant Capabilities 
+
+The assistant should support: 
+
+Adding products. 
+
+Editing product descriptions. 
+
+Creating categories. 
+
+Changing colors. 
+
+Creating promotions. 
+
+Explaining dashboard metrics. 
+
+Importing catalogs. 
+
+Detecting duplicate products. 
+
+Suggesting missing images. 
+
+Summarizing customer feedback. 
+
+Drafting customer replies. 
+
+Creating business policies. 
+
+Generating SEO titles and descriptions. 
+
+Recommending operational improvements. 
+
+10.2 Action Safety Model 
+
+The AI should classify actions: 
+
+Read-only 
+
+Low-risk write 
+
+Customer-facing write 
+
+Financial action 
+
+Security-sensitive action 
+
+Examples: 
+
+| Action | Approval | |---|---| | Draft product description | No approval | | Add a product draft | No approval | | Publish a product | User approval | | Change subscription | Explicit confirmation | | Issue refund | Explicit confirmation | | Modify staff permissions | Owner approval | | Export customer data | Re-authentication | | Change payment destination | Owner plus verification | 
+
+10.3 AI Action Contract 
+
+Every AI mutation should produce: 
+
+{ 
+
+  "action_type": "update_product", 
+
+  "organization_id": "uuid", 
+
+  "actor_user_id": "uuid", 
+
+  "before": {}, 
+
+  "proposed_after": {}, 
+
+  "validation_errors": [], 
+
+  "requires_approval": true, 
+
+  "status": "pending" 
+
+} 
+
+Never let a model directly execute raw SQL. 
+
+The AI may call approved tools such as: 
+
+list_products 
+
+create_product_draft 
+
+update_store_theme 
+
+list_orders 
+
+summarize_sales 
+
+create_discount_draft 
+
+Each tool should perform: 
+
+Authentication. 
+
+Organization authorization. 
+
+Input validation. 
+
+Business-rule validation. 
+
+Audit logging. 
+
+Idempotency where applicable. 
+
+10.4 Asset Ingestion Pipeline 
+
+Upload 
+
+  ↓ 
+
+Malware scan 
+
+  ↓ 
+
+File type validation 
+
+  ↓ 
+
+Text/image extraction 
+
+  ↓ 
+
+AI parsing 
+
+  ↓ 
+
+Schema validation 
+
+  ↓ 
+
+Duplicate detection 
+
+  ↓ 
+
+Human review 
+
+  ↓ 
+
+Draft records 
+
+  ↓ 
+
+Publish 
+
+Do not automatically publish AI-imported products without review. 
+
+ 
+
+11. Orders, Payments, and Financial Integrity 
+
+11.1 Money Handling 
+
+Use integer minor units: 
+
+$19.99 -> 1999 
+
+₹499.00 -> 49900 
+
+Store: 
+
+amount_minor_units 
+
+currency 
+
+tax_minor_units 
+
+discount_minor_units 
+
+Never calculate money using floating-point arithmetic. 
+
+11.2 Order State Machine 
+
+draft 
+
+pending_payment 
+
+paid 
+
+confirmed 
+
+processing 
+
+ready 
+
+fulfilled 
+
+completed 
+
+canceled 
+
+refunded 
+
+partially_refunded 
+
+payment_failed 
+
+Every state transition should create an order event. 
+
+11.3 Idempotency 
+
+Use idempotency keys for: 
+
+Checkout creation. 
+
+Payment confirmation. 
+
+Order creation. 
+
+Refunds. 
+
+Subscription changes. 
+
+Webhook processing. 
+
+Email dispatch. 
+
+Example: 
+
+idempotency_key = tenant_id + operation + client_request_id 
+
+11.4 Payment Webhooks 
+
+Webhook handling must: 
+
+Verify the provider signature. 
+
+Store the raw event. 
+
+Reject duplicate event IDs. 
+
+Process asynchronously. 
+
+Apply state transitions transactionally. 
+
+Record processing outcomes. 
+
+Retry failures safely. 
+
+Alert on permanently failed events. 
+
+Do not trust the browser’s payment-success redirect as proof of payment. 
+
+ 
+
+12. Trial and Subscription System 
+
+12.1 Trial Rules 
+
+Recommended policy: 
+
+30 calendar days from activation. 
+
+No charge during the trial. 
+
+Payment method verified before publishing. 
+
+Reminder at 7 days before renewal. 
+
+Reminder at 3 days. 
+
+Reminder at 24 hours. 
+
+Clear renewal price. 
+
+One-click cancellation. 
+
+Grace period after failed renewal. 
+
+Read-only access after suspension. 
+
+Export access for a defined period after cancellation. 
+
+12.2 Abuse Prevention 
+
+Use risk signals carefully: 
+
+Payment-method fingerprinting. 
+
+Phone verification. 
+
+Email reputation. 
+
+Device risk signals. 
+
+IP reputation. 
+
+Business identity consistency. 
+
+Duplicate domain detection. 
+
+Rate limits. 
+
+Manual review for suspicious activity. 
+
+Do not rely solely on household, device, or IP matching. Shared offices, families, mobile networks, and agencies create false positives. 
+
+12.3 Cancellation and Data Retention 
+
+Define: 
+
+Trial canceled: 
+
+  Storefront disabled immediately or at trial end 
+
+  Dashboard remains available until trial end 
+
+ 
+
+Paid cancellation: 
+
+  Service remains active until period end 
+
+ 
+
+Past due: 
+
+  Notifications plus limited grace period 
+
+ 
+
+Suspended: 
+
+  Storefront disabled 
+
+  Dashboard becomes read-only 
+
+ 
+
+Closed: 
+
+  Data retained for legal period 
+
+  Export available 
+
+  Deletion workflow available 
+
+Provide: 
+
+Full CSV export. 
+
+Media export. 
+
+Order export. 
+
+Customer export. 
+
+Configuration export. 
+
+Deletion request workflow. 
+
+Data retention documentation. 
+
+The product should create convenience-based retention, not obstructive lock-in. 
+
+ 
+
+13. Domains and Provisioning 
+
+13.1 Subdomain Provisioning 
+
+Flow: 
+
+Create organization 
+
+  ↓ 
+
+Generate normalized slug 
+
+  ↓ 
+
+Check availability 
+
+  ↓ 
+
+Reserve slug 
+
+  ↓ 
+
+Create domain record 
+
+  ↓ 
+
+Route hostname to storefront 
+
+  ↓ 
+
+Issue SSL 
+
+  ↓ 
+
+Mark domain active 
+
+Handle: 
+
+Reserved words. 
+
+Slug collisions. 
+
+Profanity. 
+
+Trademark complaints. 
+
+Domain takeover prevention. 
+
+Deleted-slug quarantine. 
+
+13.2 Custom Domains 
+
+Support: 
+
+Domain verification. 
+
+DNS instructions. 
+
+CNAME target. 
+
+Apex-domain handling. 
+
+SSL status. 
+
+Verification retries. 
+
+Domain transfer warnings. 
+
+Multiple domains with one primary domain. 
+
+Redirect from old domain. 
+
+Never activate a custom domain before ownership verification. 
+
+ 
+
+14. Dashboard Information Architecture 
+
+14.1 Primary Navigation 
+
+Keep the default navigation under seven items: 
+
+Home 
+
+Orders 
+
+Catalog 
+
+Customers 
+
+Growth 
+
+Appearance 
+
+Settings 
+
+Contextual sections: 
+
+Bookings 
+
+Inventory 
+
+Analytics 
+
+Team 
+
+Billing 
+
+Show modules only when enabled. 
+
+14.2 Dashboard Home 
+
+The home screen should answer: 
+
+What needs my attention? 
+
+How is my business performing? 
+
+What should I do next? 
+
+Did anything fail? 
+
+Are there new customers or orders? 
+
+Recommended cards: 
+
+New orders. 
+
+Revenue today. 
+
+Low-stock items. 
+
+Upcoming bookings. 
+
+Unanswered customer messages. 
+
+Trial or billing status. 
+
+Suggested next action. 
+
+14.3 Empty States 
+
+Every empty state should provide: 
+
+Explanation. 
+
+Primary action. 
+
+Example. 
+
+Import option. 
+
+AI assistance option. 
+
+Example: 
+
+You have no products yet. 
+
+Add your first product manually or upload a spreadsheet. 
+
+ 
+
+15. Notifications and Engagement 
+
+The goal should be useful return frequency, not manipulative addiction patterns. 
+
+Add: 
+
+New-order alerts. 
+
+Low-inventory alerts. 
+
+Booking reminders. 
+
+Payment failure alerts. 
+
+Daily business summaries. 
+
+Weekly performance summaries. 
+
+Customer review alerts. 
+
+AI suggestions. 
+
+Trial-expiration reminders. 
+
+Domain or SSL alerts. 
+
+Failed integration alerts. 
+
+Channels: 
+
+In-app 
+
+Email 
+
+SMS 
+
+WhatsApp, where legally and operationally appropriate 
+
+Push notifications 
+
+Allow users to control notification frequency. 
+
+ 
+
+16. Security Architecture 
+
+16.1 Authentication 
+
+Implement: 
+
+Passwordless email or passkeys. 
+
+Optional password login. 
+
+MFA for owners and administrators. 
+
+Session revocation. 
+
+Suspicious-login detection. 
+
+Recovery codes. 
+
+Re-authentication for sensitive actions. 
+
+Device/session management. 
+
+16.2 Authorization 
+
+Enforce authorization at multiple layers: 
+
+UI visibility 
+
+Server authorization 
+
+Database RLS 
+
+Object storage policies 
+
+Webhook authorization 
+
+Background job authorization 
+
+UI checks are not security controls. 
+
+16.3 Sensitive Operations 
+
+Require re-authentication for: 
+
+Payment changes. 
+
+Refunds. 
+
+Staff permission changes. 
+
+Data exports. 
+
+Domain changes. 
+
+Account deletion. 
+
+API key creation. 
+
+Webhook changes. 
+
+16.4 Data Protection 
+
+Implement: 
+
+TLS everywhere. 
+
+Encryption at rest through managed infrastructure. 
+
+Secret manager. 
+
+No secrets in client bundles. 
+
+PII minimization. 
+
+Field-level protection for highly sensitive values. 
+
+Signed URLs for private files. 
+
+Malware scanning. 
+
+Audit logs. 
+
+Backup encryption. 
+
+Restore testing. 
+
+16.5 Security Standard 
+
+Use OWASP ASVS 5.0 as the application-security verification baseline, with requirements mapped to architecture, development, and release gates. (owasp.org) 
+
+Security testing should include: 
+
+Broken access control. 
+
+IDOR. 
+
+SQL injection. 
+
+XSS. 
+
+CSRF. 
+
+SSRF. 
+
+File-upload abuse. 
+
+Rate-limit bypass. 
+
+Webhook replay. 
+
+Session fixation. 
+
+Privilege escalation. 
+
+Cross-tenant storage access. 
+
+Cross-tenant Realtime access. 
+
+Payment tampering. 
+
+Export authorization. 
+
+Do not rely on autonomous pentesting alone. Automated testing should supplement, not replace, expert review and manual threat modeling. 
+
+ 
+
+17. Strix or Automated Security Pipeline 
+
+17.1 Pull Request Gate 
+
+Every change should run: 
+
+Formatting 
+
+Lint 
+
+Type checking 
+
+Unit tests 
+
+Integration tests 
+
+Database migration checks 
+
+RLS tests 
+
+Dependency audit 
+
+Secret scan 
+
+Static analysis 
+
+Container scan 
+
+Preview deployment 
+
+Dynamic security scan 
+
+17.2 Preview Environment 
+
+Every risky change should receive: 
+
+Isolated preview URL. 
+
+Seeded test tenant. 
+
+Second test tenant. 
+
+Test users with different roles. 
+
+Test payments. 
+
+Test storage objects. 
+
+Test custom domain behavior. 
+
+17.3 Security Test Matrix 
+
+For each tenant-sensitive endpoint, test: 
+
+Owner can access own tenant 
+
+Manager can access allowed records 
+
+Read-only user cannot write 
+
+Tenant A cannot read Tenant B 
+
+Tenant A cannot update Tenant B 
+
+Anonymous user cannot access dashboard 
+
+Suspended tenant cannot create orders 
+
+Deleted user cannot retain access 
+
+Expired session cannot access data 
+
+17.4 Self-Healing Restrictions 
+
+An AI patching loop may: 
+
+Suggest a patch. 
+
+Run tests. 
+
+Produce a diff. 
+
+Open a review request. 
+
+Re-run scans. 
+
+It should not autonomously deploy fixes to production without an approval policy. 
+
+ 
+
+18. APIs and Events 
+
+18.1 API Conventions 
+
+Use: 
+
+Versioned APIs. 
+
+Zod or equivalent validation. 
+
+Consistent error envelopes. 
+
+Pagination. 
+
+Cursor-based pagination for large datasets. 
+
+Request IDs. 
+
+Idempotency keys. 
+
+Rate limits. 
+
+Audit events. 
+
+Example response: 
+
+{ 
+
+  "data": {}, 
+
+  "error": null, 
+
+  "request_id": "req_123" 
+
+} 
+
+18.2 Domain Events 
+
+Publish events such as: 
+
+organization.created 
+
+organization.published 
+
+product.created 
+
+product.updated 
+
+order.created 
+
+order.paid 
+
+order.fulfilled 
+
+customer.created 
+
+booking.created 
+
+payment.failed 
+
+subscription.trial_ending 
+
+subscription.renewed 
+
+subscription.past_due 
+
+domain.verified 
+
+ai.action.approved 
+
+Use an outbox pattern so database changes and emitted events remain consistent. 
+
+ 
+
+19. Background Jobs 
+
+Create worker processes for: 
+
+Catalog parsing. 
+
+Image optimization. 
+
+Search indexing. 
+
+Email delivery. 
+
+SMS delivery. 
+
+Subscription reminders. 
+
+Trial expiration. 
+
+Payment reconciliation. 
+
+Webhook retries. 
+
+Analytics aggregation. 
+
+Backup verification. 
+
+Domain verification. 
+
+Security scans. 
+
+AI processing. 
+
+Every job needs: 
+
+job_id 
+
+organization_id 
+
+attempt_count 
+
+status 
+
+started_at 
+
+completed_at 
+
+last_error 
+
+next_retry_at 
+
+Jobs must be retry-safe and tenant-aware. 
+
+ 
+
+20. Analytics 
+
+20.1 Business Analytics 
+
+Show: 
+
+Revenue. 
+
+Orders. 
+
+Average order value. 
+
+Conversion rate. 
+
+Returning customers. 
+
+Best-selling products. 
+
+Inventory turnover. 
+
+Booking utilization. 
+
+Abandoned carts. 
+
+Refund rate. 
+
+20.2 Product Analytics 
+
+Measure: 
+
+Onboarding completion. 
+
+Time to first publish. 
+
+Time to first product. 
+
+Time to first order. 
+
+Template selection. 
+
+AI feature usage. 
+
+Dashboard return frequency. 
+
+Trial-to-paid conversion. 
+
+Cancellation reasons. 
+
+Support contacts. 
+
+Feature adoption. 
+
+Do not collect unnecessary personal data. Separate tenant analytics from platform analytics. 
+
+ 
+
+21. Compliance and Governance 
+
+Because the system handles customer records and payment-related operations, add: 
+
+Privacy policy management. 
+
+Consent records. 
+
+Data-subject request workflow. 
+
+Export workflow. 
+
+Deletion workflow. 
+
+Retention policies. 
+
+Cookie preferences. 
+
+Regional tax configuration. 
+
+Terms acceptance records. 
+
+Vendor/subprocessor registry. 
+
+Incident response procedure. 
+
+Access review procedure. 
+
+Audit logging. 
+
+Data-processing agreements where applicable. 
+
+For India-focused deployments, explicitly review DPDP requirements. For European customers, review GDPR obligations. Obtain legal review before launch because compliance details depend on jurisdiction, business type, payment flow, and data-processing roles. 
+
+ 
+
+22. Build Phases 
+
+Phase 0: Discovery and Validation 
+
+Deliverables: 
+
+Business capability map. 
+
+Target customer interviews. 
+
+Pricing validation. 
+
+Trial policy. 
+
+Legal and compliance requirements. 
+
+Threat model. 
+
+Technical architecture decision record. 
+
+MVP feature specification. 
+
+Design prototypes. 
+
+Tenant lifecycle definition. 
+
+Exit criteria: 
+
+Three validated customer segments. 
+
+One clear MVP workflow. 
+
+Pricing and billing assumptions documented. 
+
+Security boundaries approved. 
+
+Phase 1: Platform Foundation 
+
+Build: 
+
+Monorepo. 
+
+CI/CD. 
+
+Environment management. 
+
+Authentication. 
+
+Organization creation. 
+
+Memberships. 
+
+Roles. 
+
+Tenant resolver. 
+
+Database migrations. 
+
+RLS framework. 
+
+Audit logging. 
+
+Error monitoring. 
+
+Feature flags. 
+
+Exit criteria: 
+
+Two test tenants can coexist. 
+
+Cross-tenant reads and writes fail. 
+
+Role tests pass. 
+
+Preview deployments work. 
+
+Phase 2: Storefront Runtime 
+
+Build: 
+
+Hostname resolution. 
+
+Template registry. 
+
+Theme tokens. 
+
+Navigation configuration. 
+
+Public catalog. 
+
+SEO metadata. 
+
+Image handling. 
+
+Caching. 
+
+Subdomain provisioning. 
+
+Publish and rollback. 
+
+Exit criteria: 
+
+A tenant can publish a storefront without developer involvement. 
+
+Template switching does not alter catalog data. 
+
+Mobile and desktop flows work. 
+
+Phase 3: Dashboard Core 
+
+Build: 
+
+Dashboard shell. 
+
+Overview. 
+
+Product management. 
+
+Category management. 
+
+Customer management. 
+
+Order pipeline. 
+
+Settings. 
+
+Staff invitations. 
+
+CSV exports. 
+
+Exit criteria: 
+
+Owner can operate a basic business daily. 
+
+Staff permissions are enforced. 
+
+Exports contain complete, correct records. 
+
+Phase 4: Checkout and Billing 
+
+Build: 
+
+Cart. 
+
+Checkout. 
+
+Payment provider integration. 
+
+Webhooks. 
+
+Receipts. 
+
+Refunds. 
+
+Idempotency. 
+
+Trial subscriptions. 
+
+Billing portal. 
+
+Renewal reminders. 
+
+Past-due states. 
+
+Exit criteria: 
+
+Test payments succeed. 
+
+Duplicate payment requests do not create duplicate orders. 
+
+Webhook replay is safe. 
+
+Failed renewals produce correct restrictions. 
+
+Phase 5: Catalog AI and Asset Ingestion 
+
+Build: 
+
+CSV import. 
+
+Spreadsheet parsing. 
+
+PDF extraction. 
+
+Image ingestion. 
+
+Product draft generation. 
+
+Duplicate detection. 
+
+Review queue. 
+
+AI-generated descriptions. 
+
+AI audit logs. 
+
+Exit criteria: 
+
+Incorrect AI output remains unpublished. 
+
+Every AI mutation is attributable and reversible. 
+
+Malware and unsupported files are rejected. 
+
+Phase 6: Business Modules 
+
+Add in order: 
+
+Inventory. 
+
+Bookings. 
+
+Quotes. 
+
+Promotions. 
+
+Reviews. 
+
+Delivery zones. 
+
+Staff scheduling. 
+
+Customer messaging. 
+
+Marketing automation. 
+
+Only release a module after its data model, permissions, notifications, export behavior, and billing impact are defined. 
+
+Phase 7: Security and Reliability Hardening 
+
+Build: 
+
+RLS test suite. 
+
+Storage isolation tests. 
+
+Realtime authorization tests. 
+
+Dynamic scans. 
+
+Rate-limit tests. 
+
+Disaster recovery. 
+
+Backup restore drills. 
+
+Observability dashboards. 
+
+Incident response runbooks. 
+
+External penetration test. 
+
+Exit criteria: 
+
+No critical or high-risk unresolved findings. 
+
+Recovery objectives tested. 
+
+Cross-tenant isolation independently verified. 
+
+Phase 8: Controlled Beta 
+
+Start with 10 to 25 businesses. 
+
+Track: 
+
+Onboarding completion. 
+
+Time to publish. 
+
+First-order success. 
+
+Support burden. 
+
+Import accuracy. 
+
+Payment failures. 
+
+Dashboard usability. 
+
+Trial conversion intent. 
+
+Cancellation reasons. 
+
+Do not add broad feature scope during the beta unless it solves a repeated operational problem. 
+
+Phase 9: Public Launch 
+
+Launch requirements: 
+
+Legal documents complete. 
+
+Billing support complete. 
+
+Customer support workflow active. 
+
+Status page active. 
+
+Backups verified. 
+
+Security review complete. 
+
+Monitoring alerts configured. 
+
+Data export tested. 
+
+Cancellation tested. 
+
+Incident response owner assigned. 
+
+ 
+
+23. Testing Strategy 
+
+23.1 Unit Tests 
+
+Cover: 
+
+Money calculations. 
+
+Tax calculations. 
+
+Discount rules. 
+
+Order transitions. 
+
+Booking availability. 
+
+Slug generation. 
+
+Configuration validation. 
+
+AI action authorization. 
+
+23.2 Integration Tests 
+
+Cover: 
+
+Authentication. 
+
+Organization membership. 
+
+RLS policies. 
+
+Product creation. 
+
+Checkout. 
+
+Webhooks. 
+
+Subscription transitions. 
+
+File uploads. 
+
+CSV exports. 
+
+Domain provisioning. 
+
+23.3 End-to-End Tests 
+
+Cover the complete journey: 
+
+Create account 
+
+  ↓ 
+
+Create business 
+
+  ↓ 
+
+Choose template 
+
+  ↓ 
+
+Import product 
+
+  ↓ 
+
+Publish storefront 
+
+  ↓ 
+
+Customer places order 
+
+  ↓ 
+
+Owner receives notification 
+
+  ↓ 
+
+Owner fulfills order 
+
+  ↓ 
+
+Customer receives receipt 
+
+  ↓ 
+
+Trial converts or cancels 
+
+23.4 Tenant Isolation Tests 
+
+This is mandatory. 
+
+Create tenants A and B and assert: 
+
+A cannot select B’s products. 
+
+A cannot update B’s orders. 
+
+A cannot delete B’s customers. 
+
+A cannot access B’s storage objects. 
+
+A cannot subscribe to B’s events. 
+
+A cannot use guessed IDs to retrieve B’s records. 
+
+A cannot access B through exports. 
+
+A cannot access B through AI tools. 
+
+A cannot access B through background jobs. 
+
+ 
+
+24. Operational Metrics 
+
+Product Metrics 
+
+Time to first publish. 
+
+Time to first catalog item. 
+
+Time to first order. 
+
+Weekly active businesses. 
+
+Dashboard task completion rate. 
+
+Feature activation rate. 
+
+AI acceptance rate. 
+
+Import correction rate. 
+
+Commercial Metrics 
+
+Trial activation rate. 
+
+Trial-to-paid conversion. 
+
+Monthly recurring revenue. 
+
+Average revenue per tenant. 
+
+Churn. 
+
+Failed payment rate. 
+
+Refund rate. 
+
+Customer acquisition cost. 
+
+Support cost per tenant. 
+
+Reliability Metrics 
+
+Storefront availability. 
+
+Dashboard availability. 
+
+Checkout success rate. 
+
+Webhook processing latency. 
+
+Background-job failure rate. 
+
+Mean time to recovery. 
+
+Data export completion rate. 
+
+ 
+
+25. UX Rules That Keep It Simple 
+
+Use one primary action per screen. 
+
+Hide advanced settings until requested. 
+
+Keep terminology business-oriented. 
+
+Always show a preview before publishing. 
+
+Autosave drafts. 
+
+Provide undo and rollback. 
+
+Use sensible defaults. 
+
+Explain errors in plain language. 
+
+Make the dashboard useful even with no data. 
+
+Surface the next best operational action. 
+
+Avoid modal overload. 
+
+Keep destructive actions explicit and reversible where possible. 
+
+Do not force users through AI flows. 
+
+Make manual editing available for every AI-generated result. 
+
+Let users complete frequent tasks in under three clicks. 
+
+The platform becomes habit-forming through reduced operational friction: opening the dashboard should immediately show the next useful action, not a wall of charts. 
+
+ 
+
+26. Recommended Initial Team 
+
+For a serious MVP: 
+
+1 Product lead 
+
+1 Product designer 
+
+2 Full-stack engineers 
+
+1 Backend/data engineer 
+
+1 QA/automation engineer 
+
+1 DevOps/security engineer, part-time or contracted 
+
+1 AI/ML engineer, part-time initially 
+
+1 Customer implementation/support lead 
+
+The first engineering hires should prioritize: 
+
+Multi-tenant authorization. 
+
+Payments. 
+
+Operational workflows. 
+
+Reliability. 
+
+The AI layer should not be allowed to dominate the initial staffing or architecture. 
+
+ 
+
+27. Practical Delivery Sequence 
+
+The most efficient order is: 
+
+Auth and organizations 
+
+  ↓ 
+
+Tenant resolution 
+
+  ↓ 
+
+RLS and authorization 
+
+  ↓ 
+
+Configuration and templates 
+
+  ↓ 
+
+Catalog 
+
+  ↓ 
+
+Storefront publishing 
+
+  ↓ 
+
+Orders 
+
+  ↓ 
+
+Payments 
+
+  ↓ 
+
+Dashboard operations 
+
+  ↓ 
+
+Billing conversion 
+
+  ↓ 
+
+Imports 
+
+  ↓ 
+
+AI assistant 
+
+  ↓ 
+
+Bookings and advanced modules 
+
+Do not build the visual editor, autonomous pentesting, advanced analytics, and unrestricted AI coding simultaneously. The critical path is: 
+
+Tenant isolation → storefront → order flow → dashboard → billing 
+
+ 
+
+28. Final Architecture Principle 
+
+The platform should be built as: 
+
+Stable shared runtime 
+
++ 
+
+Versioned tenant configuration 
+
++ 
+
+Approved modular capabilities 
+
++ 
+
+Strict tenant authorization 
+
++ 
+
+Auditable AI actions 
+
++ 
+
+Reliable billing state machine 
+
++ 
+
+Portable customer data 
+
+That architecture provides the speed of a zero-code platform without turning every tenant into an isolated codebase or allowing AI-generated changes to destabilize the system. 
+
+The most important launch criteria are not the number of templates or AI features. They are: 
+
+A business can publish quickly. 
+
+A customer can complete a purchase or booking. 
+
+The owner can fulfill it from the dashboard. 
+
+No tenant can access another tenant’s data. 
+
+Billing and cancellation behave predictably. 
+
+Every important operation is recoverable and auditable. 
+
+ .
+
+
+
+turn this into a full flegde , production ready , realtime use final end deployable project implementation plan . not an mvp but the ultimate final plan from start to finish . make the implementation plan as detailed as possible.
+### Executive System Blueprint
+
+A fully managed, AI-assisted multi-tenant platform where business owners pick a design aesthetic, list custom business features, and receive an instant storefront alongside a dedicated back-office management dashboard. The site build is free, monetized via recurring monthly hosting and management fees after an initial 30-day free trial.
+
+---
+
+### Core Value Proposition & Business Mechanics
+
+* **Target Audience:** Any business or commercial entity (retail, hospitality, bookings, service providers) needing an operational digital presence.
+* **Pricing Model:**
+* **Build Cost:** 100% Free (no upfront build charges).
+* **Free Period:** 1-month free trial to establish workflow integration and daily operations.
+* **Monetization:** Recurring monthly management fee starting in Month 2 to maintain hosting, security, and live dashboard operations.
+
+
+* **Operational Lock-in:** Client business operations (customer records, live orders, transaction receipts, domain traffic) are anchored inside the system dashboard, creating switching friction naturally through operational convenience.
+* **Abuse & Trial Verification:** Card verification and pre-authorization ($0 hold) paired with identity validation to prevent trial abuse across households/devices.
+
+---
+
+### End-to-End System Workflow
+
+```
+[ Step 1: Onboarding Wizard ]
+   │  - Client specifies business needs/feature list
+   │  - Client picks UI template variant & style bar (colors/layout)
+   │  - Client provides products/catalog (or AI parses raw assets)
+   │  - Pre-authorizes billing method for Day 31 renewal
+   ▼
+[ Step 2: Tenant Logic Layer (Zero-Code Runtime) ]
+   │  - Platform assigns wildcard domain (brand.yourdomain.com)
+   │  - Client preferences saved as JSON config in cloud database
+   │  - Dynamic routing maps domain to layout presets instantly
+   ▼
+[ Step 3: Strix Safety & Logic Verification (When Custom Code is Added) ]
+   │  - Automated headless pentesting (OWASP, IDOR, SQL injection)
+   │  - Type-checking and schema validation
+   │  - Self-healing loop: PoC sent to AI agent to patch before live release
+   ▼
+[ Step 4: Live Storefront & Client Management Dashboard ]
+   │  - Storefront: Dynamic, mobile-responsive catalog ready for orders
+   │  - Dashboard: Isolated back-office CRM (orders, customer data, inventory)
+   ▼
+[ Step 5: Day 31 Automatic Subscription Conversion ]
+   │  - Month 1: $0 active operations
+   │  - Month 2+: Automated recurring management charge
+
+```
+
+---
+
+### Feature Breakdown
+
+**1. Client Onboarding & Storefront Customization**
+
+* **Dynamic UI Switcher & Style Bar:** A real-time preview interface allowing users to toggle through template designs (e.g., Minimal, Boutique, Modern Grid) and adjust navigation bars, fonts, and color palettes.
+* **Product Catalog Display:** Pre-built interfaces to showcase products, categories, pricing, images, and descriptions.
+* **Instant Provisioning:** Immediate site generation via wildcard subdomains (`clientbrand.yourplatform.com`) with automated SSL certification. Custom domain mapping supported via edge DNS.
+
+**2. The Client Management Dashboard (Back-Office CRM)**
+
+* **Real-Time Order Pipeline:** Live stream of incoming customer orders, fulfillment statuses, and payment states.
+* **Cloud Customer Database:** Centralized CRM containing buyer contact details, purchase history, and lifetime value.
+* **Secure Gated Access:** Access to proprietary customer records and store operations is accessible through the dedicated dashboard login.
+* **1-Click Portability:** Clean CSV export tools for orders and customer lists to maintain DPDP/GDPR data compliance.
+
+**3. Vibe Coding & Custom AI Feature Layer**
+
+* **Prompt-to-Feature Engine:** AI translates custom business requests into structured configuration objects or pre-audited modular UI components.
+* **Automated Asset Ingestion:** AI parses unstructured client files (PDFs, spreadsheets, images) into clean database records (products, variants, inventory).
+* **Scoped Customization:** AI-generated CSS tweaks and business rules are stored at the tenant record level without destabilizing the global source code.
+
+**4. Platform Multi-Tenancy & Data Isolation**
+
+* **Single-Engine Architecture:** One codebase serving all client storefronts dynamically, eliminating the need to deploy and maintain dozens of separate software repositories.
+* **Row-Level Security (PostgreSQL / Supabase):** Every table row (`orders`, `customers`, `products`) carries a strict `tenant_id`. Database-level policies enforce complete tenant isolation so Client A cannot access Client B’s data.
+* **Minor Unit Financial Math:** All currency calculations processed in integer minor units (e.g., cents/paise) with idempotency headers on checkout transactions to eliminate double-charges.
+
+**5. Automated Security & QA Pipeline**
+
+* **Autonomous Pentesting (Strix):** Integrated headless security testing suite executing proof-of-concept exploits against preview builds to catch injection, authorization bypasses, and IDOR vulnerabilities.
+* **Defensive Schema Validation:** Strict runtime input verification (Zod/TypeScript) on all API endpoints and server actions.
+* **Continuous Staging Gate:** Code changes run through linter, type-check, and automated security scans before going live.
+
+make the plan as detailed and deploy ready, with full production capabilites implmentation plans and add all the features which you deem imp to this.

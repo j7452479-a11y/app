@@ -1,0 +1,3155 @@
+# Production Implementation Plan
+
+## 1. Product Definition
+
+Build a production-grade, multi-tenant commerce operating system that enables businesses to:
+
+- Create and publish a branded storefront.
+- Manage products, services, orders, customers, inventory, bookings, payments, staff, marketing, and analytics.
+- Configure business workflows without technical knowledge.
+- Use AI through controlled, auditable actions.
+- Operate from a role-aware dashboard.
+- Accept payments and manage subscriptions.
+- Use a branded subdomain or verified custom domain.
+- Export, migrate, and delete their data.
+- Run daily operations without understanding schemas, code, deployments, tenants, or prompts.
+
+The platform should be implemented as a stable shared runtime with tenant-specific configuration and approved capabilities.
+
+The core architecture is:
+
+```text
+Shared application runtime
++ Versioned tenant configuration
++ Modular business capabilities
++ Strict tenant isolation
++ Auditable AI actions
++ Reliable payment and billing state machines
++ Event-driven background processing
++ Portable tenant data
++ Full observability and recovery
+```
+
+---
+
+# 2. Product Surfaces
+
+The platform should consist of four logical applications within one monorepo.
+
+## 2.1 Marketing Application
+
+Purpose:
+
+- Explain the product.
+- Display templates and use cases.
+- Provide pricing and trial information.
+- Support signup and onboarding.
+- Present security, compliance, and support information.
+
+Primary routes:
+
+```text
+/
+ /solutions/retail
+ /solutions/restaurants
+ /solutions/services
+ /solutions/bookings
+ /solutions/quotes
+ /templates
+ /pricing
+ /security
+ /trust
+ /help
+ /contact
+ /login
+ /start
+ /legal/terms
+ /legal/privacy
+ /legal/cookies
+ /status
+```
+
+Requirements:
+
+- SEO metadata.
+- Structured data.
+- Responsive design.
+- Accessibility compliance.
+- Cookie consent.
+- Analytics consent controls.
+- Pricing configuration managed through platform configuration.
+- Experiment support for landing pages.
+- Lead capture.
+- Self-service account creation.
+- Support ticket creation.
+
+## 2.2 Tenant Storefront
+
+Public customer-facing application.
+
+Responsibilities:
+
+- Tenant branding.
+- Product and service discovery.
+- Catalog and category navigation.
+- Search and filtering.
+- Cart and checkout.
+- Booking flows.
+- Quote and inquiry forms.
+- Customer accounts.
+- Order tracking.
+- Receipts.
+- Promotions and coupons.
+- SEO.
+- Abandoned-cart recovery.
+- Reviews.
+- Store policies.
+- Business hours.
+- Contact and location details.
+- Accessibility and mobile support.
+
+Example hostnames:
+
+```text
+brand.platform.com
+shop.brand.com
+www.brand.com
+```
+
+## 2.3 Tenant Dashboard
+
+Private operations application.
+
+Responsibilities:
+
+- Onboarding.
+- Daily operational overview.
+- Catalog management.
+- Orders and fulfillment.
+- Customers.
+- Inventory.
+- Bookings.
+- Quotes.
+- Marketing.
+- Analytics.
+- Appearance.
+- Domains.
+- Billing.
+- Team permissions.
+- Integrations.
+- Data exports.
+- AI assistant.
+- Audit history.
+- Support access requests.
+
+The dashboard must be role-aware. Users should only see modules and actions relevant to their permissions.
+
+## 2.4 Platform Administration Application
+
+Internal platform operations application.
+
+Responsibilities:
+
+- Tenant management.
+- User and organization support.
+- Subscription monitoring.
+- Billing reconciliation.
+- Usage and quota management.
+- Domain and SSL status.
+- Failed jobs.
+- Webhook failures.
+- Security alerts.
+- AI request review.
+- Support impersonation.
+- Compliance workflows.
+- Incident management.
+- Feature rollout management.
+- Data export and deletion oversight.
+- System health dashboards.
+
+This application must be isolated from tenant applications and require stronger authentication, MFA, device controls, and audit logging.
+
+---
+
+# 3. Recommended Technology Architecture
+
+## 3.1 Application Stack
+
+Recommended baseline:
+
+```text
+Frontend:
+- Next.js
+- React
+- TypeScript
+- Server Components where appropriate
+- Client Components for interactive workflows
+
+UI:
+- Tailwind CSS
+- Custom design system
+- Radix-style accessible primitives
+- Storybook
+- Design tokens
+
+Backend:
+- TypeScript service layer
+- Next.js route handlers or dedicated API service
+- Background worker services
+- Domain-driven modules
+- Transactional service boundaries
+
+Database:
+- PostgreSQL
+- Row-Level Security
+- Managed read replicas when required
+- Point-in-time recovery
+- Automated backups
+
+Authentication:
+- Managed identity provider
+- Passwordless email
+- Passkeys
+- Optional password authentication
+- MFA
+- Session management
+
+Payments:
+- Stripe Billing
+- Stripe Payment Element
+- Stripe Connect only if marketplace payouts are required
+
+Storage:
+- S3-compatible object storage
+- Separate public and private buckets
+- Signed URLs
+- Malware scanning
+
+Queues:
+- Managed queue or Redis-backed queue
+- Durable retries
+- Dead-letter queues
+- Scheduled jobs
+
+Search:
+- PostgreSQL full-text search initially
+- Dedicated search engine later if scale requires it
+
+Observability:
+- OpenTelemetry
+- Centralized logs
+- Metrics
+- Tracing
+- Error tracking
+- Synthetic monitoring
+
+Deployment:
+- Managed containers or serverless services
+- Separate staging and production environments
+- Preview deployments
+- Infrastructure as code
+
+Analytics:
+- Product event pipeline
+- Tenant analytics database
+- Platform analytics warehouse
+```
+
+## 3.2 Monorepo Structure
+
+```text
+apps/
+  marketing/
+  storefront/
+  dashboard/
+  admin/
+  api/
+  worker/
+
+packages/
+  ui/
+  database/
+  migrations/
+  auth/
+  authorization/
+  tenant-runtime/
+  billing/
+  payments/
+  catalog/
+  orders/
+  bookings/
+  inventory/
+  customers/
+  promotions/
+  reviews/
+  quotes/
+  analytics/
+  notifications/
+  email/
+  sms/
+  storage/
+  domains/
+  search/
+  ai/
+  events/
+  jobs/
+  validation/
+  configuration/
+  feature-flags/
+  audit/
+  observability/
+  testing/
+  security/
+
+infra/
+  terraform/
+  kubernetes/
+  docker/
+  monitoring/
+  scripts/
+
+docs/
+  architecture/
+  adr/
+  runbooks/
+  security/
+  compliance/
+  api/
+  operations/
+```
+
+## 3.3 Environment Model
+
+Required environments:
+
+```text
+local
+development
+preview
+staging
+production
+disaster-recovery
+```
+
+Each environment requires:
+
+- Separate database.
+- Separate storage buckets.
+- Separate payment provider accounts or test mode.
+- Separate authentication configuration.
+- Separate encryption keys.
+- Separate domains.
+- Separate queue namespaces.
+- Separate observability projects.
+- Separate secrets.
+- Environment-specific feature flags.
+
+Production credentials must never be used in local or preview environments.
+
+---
+
+# 4. Core Domain Model
+
+## 4.1 Identity and Organization Tables
+
+```text
+users
+user_profiles
+organizations
+organization_members
+organization_invitations
+organization_roles
+organization_permissions
+organization_settings
+organization_features
+organization_usage
+organization_status_history
+organization_audit_events
+organization_deletion_requests
+organization_data_exports
+```
+
+## 4.2 Domain and Branding Tables
+
+```text
+organization_domains
+domain_verification_attempts
+domain_redirects
+ssl_certificates
+brand_configs
+theme_configs
+layout_configs
+navigation_configs
+seo_configs
+storefront_versions
+storefront_publications
+storefront_preview_sessions
+```
+
+## 4.3 Commerce Tables
+
+```text
+catalogs
+categories
+products
+product_variants
+product_options
+product_option_values
+product_images
+product_documents
+product_bundles
+product_tags
+product_collections
+inventory_locations
+inventory_items
+inventory_movements
+inventory_reservations
+stock_adjustments
+```
+
+## 4.4 Order Tables
+
+```text
+carts
+cart_items
+checkout_sessions
+orders
+order_items
+order_addresses
+order_fulfillments
+order_events
+order_notes
+order_status_history
+shipping_profiles
+shipping_rates
+delivery_zones
+delivery_windows
+tax_rates
+tax_calculations
+discounts
+discount_codes
+discount_redemptions
+```
+
+## 4.5 Payment Tables
+
+```text
+payment_customers
+payment_methods
+payment_intents
+payments
+refunds
+refund_events
+payout_records
+payment_provider_events
+payment_reconciliation_records
+```
+
+## 4.6 Customer Tables
+
+```text
+customers
+customer_accounts
+customer_addresses
+customer_consents
+customer_notes
+customer_tags
+customer_segments
+customer_events
+customer_messages
+customer_preferences
+```
+
+## 4.7 Booking Tables
+
+```text
+services
+service_variants
+staff_profiles
+resources
+availability_rules
+availability_exceptions
+availability_overrides
+booking_policies
+appointments
+appointment_participants
+appointment_events
+booking_waitlists
+booking_reminders
+```
+
+## 4.8 Marketing Tables
+
+```text
+campaigns
+campaign_recipients
+promotion_rules
+promotion_redemptions
+email_templates
+automations
+automation_runs
+customer_segments
+reviews
+review_requests
+review_responses
+```
+
+## 4.9 AI Tables
+
+```text
+ai_conversations
+ai_messages
+ai_requests
+ai_tool_calls
+ai_actions
+ai_action_previews
+ai_action_approvals
+ai_usage
+ai_cost_records
+ai_failure_events
+ai_policy_rules
+ai_model_versions
+```
+
+## 4.10 Platform Operations Tables
+
+```text
+platform_admins
+support_sessions
+support_access_grants
+support_access_events
+platform_incidents
+platform_alerts
+feature_flag_definitions
+feature_flag_assignments
+job_runs
+job_failures
+webhook_events
+system_health_checks
+```
+
+Every tenant-owned record must include:
+
+```text
+organization_id
+created_at
+updated_at
+created_by
+updated_by
+```
+
+Records requiring lifecycle management should also include:
+
+```text
+status
+deleted_at
+archived_at
+version
+```
+
+---
+
+# 5. Multi-Tenant Isolation
+
+Tenant isolation is the highest-priority security boundary.
+
+## 5.1 Tenant Resolution
+
+Tenant resolution must be server-side.
+
+### Storefront requests
+
+```text
+Incoming hostname
+↓
+Normalize hostname
+↓
+Resolve domain record
+↓
+Resolve organization
+↓
+Check organization status
+↓
+Load published storefront version
+↓
+Load enabled modules
+↓
+Render tenant storefront
+```
+
+### Dashboard requests
+
+```text
+Authenticated session
+↓
+Resolve user
+↓
+Resolve active organization
+↓
+Resolve membership
+↓
+Resolve role and permissions
+↓
+Apply database tenant context
+↓
+Execute authorized query
+```
+
+The browser must never be trusted to provide the organization identity.
+
+## 5.2 Row-Level Security
+
+Enable RLS on every exposed tenant table.
+
+Policies must enforce:
+
+- Read access.
+- Insert access.
+- Update access.
+- Delete access.
+- Organization membership status.
+- Role permissions.
+- Suspended organization restrictions.
+- Deleted user restrictions.
+- Support impersonation rules.
+- Service-role limitations.
+
+Every write must use both:
+
+```sql
+using (...)
+with check (...)
+```
+
+Prevent:
+
+- Updating `organization_id`.
+- Cross-tenant record references.
+- Cross-tenant joins through user-controlled IDs.
+- Cross-tenant object storage access.
+- Unauthorized event subscriptions.
+- Unauthorized export generation.
+- Unauthorized background job execution.
+
+## 5.3 Tenant Isolation Test Suite
+
+Create automated tests for every tenant-sensitive operation.
+
+Test cases:
+
+- Tenant A can read its own products.
+- Tenant A cannot read Tenant B products.
+- Tenant A cannot update Tenant B orders.
+- Tenant A cannot delete Tenant B customers.
+- Tenant A cannot guess a record ID to bypass authorization.
+- Tenant A cannot access Tenant B storage objects.
+- Tenant A cannot receive Tenant B realtime events.
+- Tenant A cannot export Tenant B records.
+- Tenant A cannot use AI tools against Tenant B.
+- Tenant A cannot cause a background job to execute for Tenant B.
+- Suspended tenants cannot create new orders.
+- Deleted members lose access immediately.
+- Expired sessions cannot access the dashboard.
+- Support users cannot access a tenant without an explicit support session.
+
+---
+
+# 6. Authorization Model
+
+## 6.1 Roles
+
+Default roles:
+
+```text
+Owner
+Administrator
+Manager
+Sales Staff
+Fulfillment Staff
+Inventory Staff
+Finance Staff
+Marketing Staff
+Booking Staff
+Read-only Analyst
+Support Agent
+Platform Support
+Platform Administrator
+```
+
+Permissions should be granular rather than hardcoded into UI logic.
+
+Example permission format:
+
+```text
+catalog.products.read
+catalog.products.create
+catalog.products.update
+catalog.products.publish
+orders.read
+orders.fulfill
+orders.refund
+customers.export
+billing.manage
+team.members.manage
+domains.manage
+ai.actions.approve
+```
+
+## 6.2 Authorization Layers
+
+Enforce authorization at:
+
+1. UI visibility.
+2. Server-side action handlers.
+3. API middleware.
+4. Domain service methods.
+5. Database RLS.
+6. Storage policies.
+7. Realtime subscription authorization.
+8. Background job execution.
+9. Webhook processing.
+10. Export generation.
+11. AI tool execution.
+
+UI checks are never sufficient security controls.
+
+## 6.3 Sensitive Operations
+
+Require re-authentication for:
+
+- Payment method changes.
+- Refunds.
+- Subscription changes.
+- Staff permission changes.
+- Data exports.
+- Domain changes.
+- Account deletion.
+- API key creation.
+- Webhook changes.
+- Tax configuration changes.
+- Payment destination changes.
+- Support access approval.
+
+---
+
+# 7. Tenant Lifecycle
+
+Organizations should use an explicit lifecycle.
+
+```text
+created
+onboarding
+trialing
+trial_expiring
+payment_required
+active
+past_due
+grace_period
+restricted
+suspended
+canceled
+closed
+deletion_pending
+deleted
+```
+
+Every transition must:
+
+- Be validated.
+- Be recorded.
+- Emit a domain event.
+- Be idempotent.
+- Be observable.
+- Be reversible where appropriate.
+- Include an actor or system source.
+- Include the previous and next state.
+
+Example:
+
+```text
+trialing
+  -> trial_expiring
+  -> payment_required
+  -> active
+
+trialing
+  -> canceled
+  -> closed
+
+active
+  -> past_due
+  -> grace_period
+  -> restricted
+  -> suspended
+```
+
+---
+
+# 8. Onboarding System
+
+Onboarding should be a resumable workflow, not a collection of independent pages.
+
+## 8.1 Onboarding State
+
+Store:
+
+```text
+onboarding_status
+current_step
+completed_steps
+skipped_steps
+answers
+last_saved_at
+completion_percentage
+```
+
+Every step should autosave.
+
+## 8.2 Onboarding Flow
+
+### Step 1: Business Identity
+
+Collect:
+
+- Business name.
+- Business category.
+- Country.
+- Currency.
+- Time zone.
+- Address.
+- Contact information.
+- Business hours.
+- Legal business information when required.
+
+### Step 2: Business Goal
+
+Ask what the customer needs:
+
+- Sell products.
+- Take food orders.
+- Accept bookings.
+- Collect quotes.
+- Receive inquiries.
+- Offer pickup.
+- Offer delivery.
+- Sell digital products.
+- Collect deposits.
+- Manage memberships.
+
+This activates initial modules.
+
+### Step 3: Visual Direction
+
+Allow:
+
+- Template selection.
+- Logo upload.
+- Cover image upload.
+- Brand color.
+- Accent color.
+- Font pairing.
+- Button style.
+- Corner radius.
+- Image ratio.
+- Navigation style.
+
+### Step 4: Data Import
+
+Support:
+
+- Manual entry.
+- CSV upload.
+- Spreadsheet upload.
+- PDF upload.
+- Image upload.
+- Website import.
+- API import.
+- AI-assisted extraction.
+
+All imported records must enter a review queue before publication.
+
+### Step 5: Operational Setup
+
+Configure:
+
+- Fulfillment methods.
+- Pickup.
+- Delivery zones.
+- Shipping.
+- Taxes.
+- Inventory.
+- Booking availability.
+- Refund policy.
+- Notifications.
+- Customer communications.
+- Business policies.
+
+### Step 6: Payment Verification
+
+Collect:
+
+- Payment method.
+- Business identity information.
+- Trial consent.
+- Renewal price.
+- Renewal date.
+- Cancellation terms.
+- Tax and billing details.
+
+The UI must clearly distinguish:
+
+- Free trial.
+- Payment method verification.
+- Authorization holds.
+- Future renewal charges.
+- Immediate charges, if any.
+
+### Step 7: Preview
+
+Show:
+
+- Desktop storefront.
+- Mobile storefront.
+- Catalog.
+- Product detail.
+- Checkout.
+- Booking flow.
+- Customer confirmation.
+- Dashboard preview.
+
+### Step 8: Publish
+
+Provision:
+
+- Subdomain.
+- SSL.
+- Default email sender.
+- Analytics.
+- Dashboard workspace.
+- Initial notifications.
+- Search index.
+- Published configuration version.
+
+---
+
+# 9. Storefront Runtime
+
+## 9.1 Template Architecture
+
+Launch with multiple differentiated templates using a shared content model.
+
+Recommended template families:
+
+```text
+Minimal
+Boutique
+Modern Grid
+Service Studio
+Restaurant
+Local Commerce
+Portfolio Services
+Booking First
+```
+
+Templates must not own business data. They should consume normalized tenant configuration and content.
+
+## 9.2 Template Registry
+
+Each template should declare:
+
+```text
+template_id
+supported_modules
+required_config_schema
+supported_components
+responsive_variants
+seo_strategy
+accessibility_status
+version
+```
+
+## 9.3 Storefront Rendering
+
+The storefront runtime should:
+
+- Resolve tenant from hostname.
+- Load the latest published configuration.
+- Load public tenant data.
+- Exclude private records.
+- Render through a template registry.
+- Apply validated theme tokens.
+- Cache public content.
+- Invalidate cache on publication.
+- Support rollback.
+- Produce consistent metadata.
+- Generate canonical URLs.
+- Generate sitemap and robots configuration.
+- Support localized content where enabled.
+
+## 9.4 Publish Model
+
+Configuration changes should follow:
+
+```text
+draft
+↓
+validated
+↓
+preview
+↓
+approved
+↓
+published
+↓
+rollback_available
+```
+
+Every published version must include:
+
+```text
+version_id
+organization_id
+created_by
+published_by
+created_at
+configuration_hash
+schema_versions
+change_summary
+```
+
+No draft should directly affect production storefront rendering.
+
+---
+
+# 10. Configuration System
+
+Use typed, versioned configuration instead of unrestricted JSON.
+
+Configuration domains:
+
+```text
+brand_config
+theme_config
+layout_config
+navigation_config
+catalog_config
+checkout_config
+order_config
+booking_config
+notification_config
+seo_config
+feature_flags
+policy_config
+custom_css_tokens
+```
+
+Requirements:
+
+- Schema validation.
+- Version history.
+- Draft state.
+- Preview state.
+- Publication.
+- Rollback.
+- Change attribution.
+- Migration support.
+- Default configuration.
+- Tenant overrides.
+- Platform-level constraints.
+- AI-generated change labeling.
+
+No arbitrary configuration should be rendered without validation.
+
+---
+
+# 11. Catalog and Import System
+
+## 11.1 Catalog Features
+
+Support:
+
+- Products.
+- Services.
+- Variants.
+- Options.
+- Categories.
+- Collections.
+- Tags.
+- Images.
+- Videos.
+- Pricing.
+- Taxability.
+- Inventory tracking.
+- Digital assets.
+- SEO fields.
+- Product availability.
+- Draft and published states.
+
+## 11.2 Asset Ingestion Pipeline
+
+```text
+Upload
+↓
+Authentication and authorization
+↓
+File size validation
+↓
+MIME validation
+↓
+Malware scan
+↓
+Object storage quarantine
+↓
+Text/image extraction
+↓
+AI parsing
+↓
+Schema validation
+↓
+Duplicate detection
+↓
+Confidence scoring
+↓
+Human review
+↓
+Draft record creation
+↓
+Manual correction
+↓
+Publish
+```
+
+AI must never automatically publish imported products without an approved policy and explicit review.
+
+## 11.3 Import Formats
+
+Support:
+
+```text
+CSV
+XLSX
+PDF
+DOCX
+JPEG
+PNG
+WebP
+HEIC
+Public website URLs
+Structured API imports
+```
+
+Each import must produce:
+
+- Import ID.
+- Source file.
+- Processing status.
+- Parsed records.
+- Validation errors.
+- Duplicate candidates.
+- Confidence scores.
+- Review history.
+- Actor attribution.
+- Rollback capability.
+
+---
+
+# 12. Orders and Fulfillment
+
+## 12.1 Order State Machine
+
+```text
+draft
+pending_payment
+paid
+confirmed
+processing
+ready
+partially_fulfilled
+fulfilled
+completed
+canceled
+payment_failed
+partially_refunded
+refunded
+disputed
+```
+
+Every state transition must:
+
+- Validate the current state.
+- Validate the actor.
+- Record an order event.
+- Emit a domain event.
+- Be idempotent.
+- Be visible in the order timeline.
+
+## 12.2 Order Capabilities
+
+Support:
+
+- Pickup.
+- Delivery.
+- Shipping.
+- Scheduled fulfillment.
+- Partial fulfillment.
+- Order notes.
+- Internal notes.
+- Customer messages.
+- Refunds.
+- Cancellations.
+- Taxes.
+- Discounts.
+- Gift cards.
+- Receipts.
+- Order status notifications.
+
+## 12.3 Financial Integrity
+
+Use integer minor units:
+
+```text
+amount_minor_units
+tax_minor_units
+discount_minor_units
+shipping_minor_units
+refund_minor_units
+currency
+```
+
+Never use floating-point arithmetic for money.
+
+Store the currency on every monetary record.
+
+---
+
+# 13. Checkout and Payments
+
+## 13.1 Checkout Requirements
+
+Checkout must support:
+
+- Guest checkout.
+- Customer accounts.
+- Address validation.
+- Tax calculation.
+- Shipping or delivery selection.
+- Pickup.
+- Discounts.
+- Deposits.
+- Payment methods.
+- Fraud signals.
+- Consent capture.
+- Terms acceptance.
+- Idempotency.
+- Confirmation pages.
+- Receipts.
+
+## 13.2 Payment Flow
+
+```text
+Create checkout session
+↓
+Validate cart
+↓
+Recalculate prices server-side
+↓
+Calculate tax
+↓
+Reserve inventory
+↓
+Create payment intent
+↓
+Customer confirms payment
+↓
+Provider webhook received
+↓
+Verify signature
+↓
+Persist raw event
+↓
+Process event transactionally
+↓
+Mark payment and order state
+↓
+Release or finalize inventory
+↓
+Send receipt
+```
+
+The browser redirect is not proof of payment.
+
+## 13.3 Idempotency
+
+Use idempotency keys for:
+
+- Checkout creation.
+- Payment confirmation.
+- Order creation.
+- Refunds.
+- Subscription changes.
+- Webhook processing.
+- Email dispatch.
+- SMS dispatch.
+- Inventory reservation.
+- Domain provisioning.
+
+## 13.4 Webhook Processing
+
+Webhook handling must:
+
+- Verify provider signatures.
+- Store raw payloads.
+- Reject duplicate event IDs.
+- Process asynchronously.
+- Retry transient failures.
+- Use transactional state changes.
+- Record processing outcomes.
+- Use dead-letter handling.
+- Alert on permanent failures.
+- Support replay from the admin application.
+
+---
+
+# 14. Subscription and Billing System
+
+## 14.1 Billing States
+
+```text
+trialing
+trial_expiring
+payment_required
+active
+past_due
+grace_period
+restricted
+suspended
+canceled
+closed
+```
+
+The platform must maintain its own synchronized billing state instead of relying only on the payment provider.
+
+## 14.2 Trial Policy
+
+Recommended behavior:
+
+- Thirty calendar days from activation.
+- Payment method required before publishing.
+- No charge during trial.
+- Renewal price shown clearly.
+- Reminder seven days before renewal.
+- Reminder three days before renewal.
+- Reminder twenty-four hours before renewal.
+- One-click cancellation.
+- Grace period after failed renewal.
+- Read-only dashboard after suspension.
+- Export access after cancellation.
+
+## 14.3 Billing Webhooks
+
+Track:
+
+```text
+subscription.created
+subscription.updated
+subscription.trial_will_end
+subscription.renewed
+invoice.created
+invoice.paid
+invoice.payment_failed
+customer.subscription.deleted
+payment_method.updated
+```
+
+Every provider event must map to an internal billing event and be stored immutably.
+
+## 14.4 Cancellation and Retention
+
+Define behavior for:
+
+- Trial cancellation.
+- Paid cancellation.
+- Past-due billing.
+- Suspension.
+- Closure.
+- Data deletion.
+- Export retention.
+- Media retention.
+- Legal retention.
+- Chargeback or dispute.
+
+Customers must be able to export:
+
+- Products.
+- Orders.
+- Customers.
+- Inventory.
+- Bookings.
+- Configuration.
+- Reviews.
+- Media.
+- Billing records.
+- Audit records where legally appropriate.
+
+---
+
+# 15. Inventory
+
+Inventory should support:
+
+- Multiple locations.
+- Stock on hand.
+- Reserved stock.
+- Available stock.
+- Incoming stock.
+- Low-stock thresholds.
+- Stock adjustments.
+- Transfers.
+- Purchase records.
+- Inventory movements.
+- Inventory history.
+- Product variants.
+- Backorders.
+- Overselling policies.
+
+Inventory updates must be transactional and idempotent.
+
+Recommended calculation:
+
+```text
+available_stock =
+stock_on_hand
+- reserved_stock
+- unavailable_stock
+```
+
+Inventory events should be immutable.
+
+---
+
+# 16. Bookings
+
+Booking functionality should support:
+
+- Services.
+- Staff.
+- Resources.
+- Availability rules.
+- Breaks.
+- Time zones.
+- Buffer times.
+- Blackout dates.
+- Exceptions.
+- Deposits.
+- Cancellations.
+- Rescheduling.
+- Waitlists.
+- Reminders.
+- Customer self-service.
+- Calendar integrations.
+- Double-booking protection.
+
+Booking creation must lock the relevant availability range transactionally.
+
+Booking states:
+
+```text
+requested
+pending_payment
+confirmed
+rescheduled
+checked_in
+completed
+canceled
+no_show
+refunded
+```
+
+---
+
+# 17. Quotes and Inquiries
+
+Support:
+
+- Custom quote forms.
+- Conditional fields.
+- File attachments.
+- Lead routing.
+- Internal notes.
+- Quote generation.
+- Quote expiration.
+- Customer approval.
+- Deposit collection.
+- Conversion to order.
+- Email notifications.
+- Spam prevention.
+
+---
+
+# 18. Customer Management
+
+Customer features:
+
+- Unified customer profiles.
+- Order history.
+- Booking history.
+- Quotes.
+- Conversations.
+- Tags.
+- Segments.
+- Notes.
+- Consent records.
+- Communication preferences.
+- Marketing subscription status.
+- Data export.
+- Deletion workflows.
+
+PII should be minimized, access-controlled, encrypted where necessary, and excluded from logs.
+
+---
+
+# 19. Notifications and Communications
+
+## 19.1 Channels
+
+Support:
+
+- In-app.
+- Email.
+- SMS.
+- Push.
+- WhatsApp where legally and operationally appropriate.
+
+## 19.2 Notification Categories
+
+- New order.
+- Order status changes.
+- Low inventory.
+- New booking.
+- Booking reminders.
+- Payment failures.
+- Subscription reminders.
+- Domain verification.
+- SSL failures.
+- New review.
+- Customer inquiry.
+- Daily summary.
+- Weekly summary.
+- AI suggestions.
+- Integration failures.
+- Security alerts.
+
+## 19.3 Notification Architecture
+
+Use:
+
+```text
+Domain event
+↓
+Notification policy evaluation
+↓
+Recipient resolution
+↓
+Preference filtering
+↓
+Template rendering
+↓
+Channel dispatch
+↓
+Delivery tracking
+↓
+Retry or dead-letter handling
+```
+
+Users must control notification preferences and frequency.
+
+---
+
+# 20. AI Platform
+
+AI must operate as a controlled application capability, not an unrestricted code generator.
+
+## 20.1 AI Capabilities
+
+Support:
+
+- Product creation.
+- Product description drafting.
+- Category generation.
+- Duplicate detection.
+- Catalog import.
+- Image recommendations.
+- Theme changes.
+- Promotion drafts.
+- Dashboard explanations.
+- Customer feedback summaries.
+- Customer response drafts.
+- SEO generation.
+- Policy drafting.
+- Operational recommendations.
+- Sales summaries.
+- Inventory recommendations.
+- Booking optimization suggestions.
+
+## 20.2 AI Action Classification
+
+```text
+read_only
+low_risk_write
+customer_facing_write
+financial_action
+security_sensitive_action
+```
+
+Examples:
+
+| Action | Approval |
+|---|---|
+| Explain sales metrics | None |
+| Draft product description | None |
+| Create product draft | None |
+| Create category draft | None |
+| Publish product | User approval |
+| Change storefront theme | User approval |
+| Create promotion | User approval |
+| Issue refund | Explicit confirmation |
+| Change subscription | Explicit confirmation |
+| Change staff permissions | Owner approval |
+| Export customer data | Re-authentication |
+| Change payment destination | Owner approval plus verification |
+
+## 20.3 AI Action Contract
+
+Every mutation must produce:
+
+```json
+{
+  "action_type": "update_product",
+  "organization_id": "org_123",
+  "actor_user_id": "user_123",
+  "before": {},
+  "proposed_after": {},
+  "validation_errors": [],
+  "requires_approval": true,
+  "status": "pending",
+  "idempotency_key": "..."
+}
+```
+
+The model must never:
+
+- Execute raw SQL.
+- Bypass authorization.
+- Call arbitrary URLs.
+- Access unapproved tables.
+- Modify billing without confirmation.
+- Publish unreviewed content.
+- Change staff permissions without required approval.
+- Access another organization.
+
+## 20.4 Approved AI Tools
+
+Examples:
+
+```text
+list_products
+get_product
+create_product_draft
+update_product_draft
+create_category_draft
+update_store_theme
+preview_storefront
+list_orders
+summarize_sales
+list_inventory
+create_discount_draft
+draft_customer_reply
+generate_seo_metadata
+summarize_reviews
+```
+
+Every tool must perform:
+
+- Authentication.
+- Organization authorization.
+- Input validation.
+- Business-rule validation.
+- Rate limiting.
+- Cost tracking.
+- Audit logging.
+- Idempotency where applicable.
+- Output sanitization.
+
+## 20.5 AI Governance
+
+Track:
+
+- Model.
+- Prompt version.
+- Tool calls.
+- Input classification.
+- Output validation.
+- User approval.
+- Final result.
+- Cost.
+- Latency.
+- Failure reason.
+- Confidence.
+- Rollback information.
+
+Provide:
+
+- AI usage quotas.
+- Per-tenant controls.
+- Model fallback.
+- Prompt versioning.
+- Data retention controls.
+- Opt-out controls.
+- Human review queues.
+- Abuse detection.
+
+---
+
+# 21. Domains and Provisioning
+
+## 21.1 Subdomain Flow
+
+```text
+Create organization
+↓
+Normalize slug
+↓
+Validate reserved words
+↓
+Check profanity and abuse rules
+↓
+Check availability
+↓
+Reserve slug
+↓
+Create domain record
+↓
+Configure routing
+↓
+Issue SSL
+↓
+Run health check
+↓
+Mark active
+```
+
+Handle:
+
+- Slug collisions.
+- Deleted slug quarantine.
+- Reserved names.
+- Trademark complaints.
+- Domain takeover prevention.
+- Abuse reports.
+- SSL failures.
+- Redirects.
+
+## 21.2 Custom Domain Flow
+
+```text
+Add domain
+↓
+Generate verification token
+↓
+Display DNS instructions
+↓
+Poll verification
+↓
+Validate ownership
+↓
+Provision SSL
+↓
+Run routing health check
+↓
+Set primary domain
+↓
+Redirect secondary domains
+```
+
+Never activate an unverified custom domain.
+
+Support:
+
+- CNAME.
+- A records.
+- Apex domains.
+- WWW domains.
+- Multiple domains.
+- Primary domain selection.
+- Redirects.
+- Verification retries.
+- SSL renewal.
+- DNS error explanation.
+
+---
+
+# 22. Event-Driven Architecture
+
+Use an outbox pattern.
+
+## 22.1 Domain Events
+
+Examples:
+
+```text
+organization.created
+organization.published
+organization.suspended
+product.created
+product.updated
+product.published
+order.created
+order.paid
+order.fulfilled
+order.refunded
+customer.created
+booking.created
+booking.confirmed
+payment.failed
+subscription.trial_ending
+subscription.renewed
+subscription.past_due
+domain.verified
+ai.action.created
+ai.action.approved
+export.completed
+```
+
+## 22.2 Outbox Processing
+
+Within the same database transaction:
+
+1. Update domain state.
+2. Insert outbox record.
+3. Commit transaction.
+4. Worker publishes the event.
+5. Mark event delivered.
+6. Retry failures.
+7. Move permanent failures to dead-letter queue.
+
+Event consumers must be idempotent.
+
+---
+
+# 23. Background Jobs
+
+Required worker categories:
+
+```text
+Catalog parsing
+Image optimization
+Search indexing
+Email delivery
+SMS delivery
+Push delivery
+Subscription reminders
+Trial expiration
+Payment reconciliation
+Webhook retries
+Analytics aggregation
+Backup verification
+Domain verification
+SSL monitoring
+Security scans
+AI processing
+Data export
+Data deletion
+Review requests
+Abandoned cart recovery
+Inventory alerts
+Booking reminders
+```
+
+Every job should include:
+
+```text
+job_id
+organization_id
+type
+payload_version
+attempt_count
+status
+priority
+started_at
+completed_at
+last_error
+next_retry_at
+trace_id
+```
+
+Requirements:
+
+- Retry-safe.
+- Tenant-aware.
+- Idempotent.
+- Timeout-protected.
+- Observable.
+- Dead-letter capable.
+- Rate-limited.
+- Cancelable where appropriate.
+
+---
+
+# 24. API Standards
+
+Use versioned APIs:
+
+```text
+/api/v1/organizations
+/api/v1/products
+/api/v1/orders
+/api/v1/customers
+/api/v1/bookings
+/api/v1/billing
+```
+
+Every API should support:
+
+- Request IDs.
+- Trace IDs.
+- Authentication.
+- Authorization.
+- Input validation.
+- Output schemas.
+- Pagination.
+- Cursor-based pagination for large collections.
+- Rate limiting.
+- Idempotency keys.
+- Consistent errors.
+- Audit events.
+- Versioning.
+
+Response format:
+
+```json
+{
+  "data": {},
+  "error": null,
+  "request_id": "req_123"
+}
+```
+
+Error format:
+
+```json
+{
+  "data": null,
+  "error": {
+    "code": "ORDER_NOT_FOUND",
+    "message": "The order could not be found.",
+    "field_errors": {}
+  },
+  "request_id": "req_123"
+}
+```
+
+Do not expose internal database errors.
+
+---
+
+# 25. Realtime Features
+
+Use realtime selectively for operational value.
+
+Realtime use cases:
+
+- New order notifications.
+- Order status changes.
+- Inventory updates.
+- Booking availability.
+- Dashboard alerts.
+- Import progress.
+- AI action status.
+- Data export status.
+- Domain verification progress.
+- Support session state.
+
+Requirements:
+
+- Authenticate every subscription.
+- Authorize organization membership.
+- Filter events server-side.
+- Prevent cross-tenant channels.
+- Expire subscriptions.
+- Handle reconnects.
+- Support missed-event recovery.
+- Avoid exposing sensitive payloads.
+- Test channel authorization independently.
+
+---
+
+# 26. Analytics
+
+## 26.1 Tenant Business Analytics
+
+Track:
+
+- Revenue.
+- Orders.
+- Average order value.
+- Conversion rate.
+- Returning customers.
+- Best-selling products.
+- Inventory turnover.
+- Booking utilization.
+- Abandoned carts.
+- Refund rate.
+- Customer acquisition source.
+- Quote conversion.
+- Review performance.
+
+## 26.2 Platform Analytics
+
+Track:
+
+- Signup conversion.
+- Onboarding completion.
+- Time to first publish.
+- Time to first product.
+- Time to first order.
+- Trial activation.
+- Trial-to-paid conversion.
+- Churn.
+- Cancellation reasons.
+- Support contacts.
+- Feature adoption.
+- AI usage.
+- Import correction rates.
+- Payment failure rates.
+- Storefront performance.
+
+Separate tenant analytics from platform analytics.
+
+Do not collect unnecessary personal data.
+
+---
+
+# 27. Security Program
+
+## 27.1 Authentication
+
+Implement:
+
+- Passwordless email.
+- Passkeys.
+- Optional password login.
+- MFA for owners and administrators.
+- Recovery codes.
+- Session revocation.
+- Device/session management.
+- Suspicious login detection.
+- Rate limiting.
+- Account lockout protection.
+- Secure recovery flows.
+
+## 27.2 Data Protection
+
+Implement:
+
+- TLS everywhere.
+- Encryption at rest.
+- Secret management.
+- No secrets in client bundles.
+- PII minimization.
+- Field-level encryption for highly sensitive data.
+- Signed private storage URLs.
+- Malware scanning.
+- Encrypted backups.
+- Key rotation.
+- Audit logging.
+- Secure deletion.
+
+## 27.3 Security Testing
+
+Test for:
+
+- Broken access control.
+- IDOR.
+- SQL injection.
+- XSS.
+- CSRF.
+- SSRF.
+- File upload abuse.
+- Rate-limit bypass.
+- Webhook replay.
+- Session fixation.
+- Privilege escalation.
+- Cross-tenant storage access.
+- Cross-tenant realtime access.
+- Payment tampering.
+- Export authorization.
+- Domain takeover.
+- Secret leakage.
+- Dependency vulnerabilities.
+- Supply-chain attacks.
+
+Use OWASP ASVS as the application security baseline.
+
+## 27.4 Support Impersonation
+
+Support access must require:
+
+- Explicit tenant approval where practical.
+- Reason capture.
+- Time-limited access.
+- Restricted permissions.
+- Visible impersonation banner.
+- Full audit trail.
+- Session recording metadata.
+- Automatic expiration.
+- Emergency override policy with post-incident review.
+
+---
+
+# 28. Compliance and Governance
+
+Implement the infrastructure for:
+
+- Privacy policies.
+- Cookie preferences.
+- Consent records.
+- Terms acceptance.
+- Data export requests.
+- Data deletion requests.
+- Retention policies.
+- Data-processing agreements.
+- Vendor registry.
+- Subprocessor registry.
+- Access reviews.
+- Incident response.
+- Breach notification workflow.
+- Legal hold support.
+- Regional tax configuration.
+
+Review jurisdiction-specific requirements before launch, including:
+
+- United States state privacy laws.
+- GDPR where applicable.
+- India DPDP requirements where applicable.
+- Payment card obligations.
+- Tax and invoice requirements.
+- Messaging and marketing consent laws.
+
+Legal review is required before production launch.
+
+---
+
+# 29. Observability and Reliability
+
+## 29.1 Application Telemetry
+
+Collect:
+
+- Structured logs.
+- Metrics.
+- Distributed traces.
+- Request IDs.
+- Tenant IDs.
+- Job IDs.
+- Webhook IDs.
+- Deployment versions.
+- Error fingerprints.
+
+Never log:
+
+- Passwords.
+- Payment secrets.
+- Full card information.
+- Authentication tokens.
+- Private customer content unless explicitly approved.
+
+## 29.2 Key Metrics
+
+Platform:
+
+- Request rate.
+- Error rate.
+- Latency.
+- Database performance.
+- Queue depth.
+- Job failures.
+- Webhook latency.
+- Payment success rate.
+- Storefront availability.
+- Dashboard availability.
+- Realtime connection health.
+
+Business:
+
+- Time to publish.
+- Time to first order.
+- Trial conversion.
+- Churn.
+- Failed payments.
+- Refunds.
+- Support cost.
+- Import correction rate.
+- AI acceptance rate.
+
+## 29.3 Service Objectives
+
+Define explicit targets, for example:
+
+```text
+Storefront availability: 99.95%
+Dashboard availability: 99.9%
+Checkout success rate: 99.5% excluding provider declines
+Webhook processing latency: under 60 seconds for normal events
+Critical job completion: over 99.9%
+Recovery point objective: 15 minutes or better
+Recovery time objective: 60 minutes or better
+```
+
+Targets should be finalized based on infrastructure budget and customer commitments.
+
+---
+
+# 30. Backups and Disaster Recovery
+
+Implement:
+
+- Automated database backups.
+- Point-in-time recovery.
+- Encrypted storage backups.
+- Cross-region backup copies.
+- Object storage versioning.
+- Backup integrity verification.
+- Restore automation.
+- Recovery runbooks.
+- Quarterly restore drills.
+- Disaster recovery environment.
+- Dependency outage procedures.
+- Payment provider outage procedures.
+
+Test:
+
+- Database restore.
+- Object storage restore.
+- Queue recovery.
+- Domain routing recovery.
+- Configuration rollback.
+- Full tenant restoration.
+- Full platform restoration.
+
+---
+
+# 31. CI/CD and Release Engineering
+
+Every pull request should run:
+
+```text
+Formatting
+Lint
+Type checking
+Unit tests
+Integration tests
+Database migration checks
+RLS tests
+Storage isolation tests
+Dependency audit
+Secret scanning
+Static analysis
+Container scanning
+Build verification
+Preview deployment
+End-to-end smoke tests
+Dynamic security scans
+```
+
+## 31.1 Deployment Strategy
+
+Use:
+
+- Trunk-based development or short-lived branches.
+- Protected main branch.
+- Required code review.
+- Automated migration validation.
+- Preview deployments.
+- Staged production rollout.
+- Canary releases for high-risk changes.
+- Feature flags.
+- Automated rollback.
+- Deployment approvals for sensitive services.
+
+## 31.2 Database Migration Rules
+
+Migrations must be:
+
+- Backward compatible.
+- Reviewed.
+- Tested against production-like data volume.
+- Reversible where possible.
+- Separated from destructive cleanup.
+- Observable.
+- Executed through controlled deployment tooling.
+
+Avoid breaking application and database changes in one deployment.
+
+---
+
+# 32. Testing Strategy
+
+## 32.1 Unit Testing
+
+Cover:
+
+- Money calculations.
+- Tax calculations.
+- Discount rules.
+- Order transitions.
+- Booking availability.
+- Slug generation.
+- Configuration validation.
+- Permission checks.
+- AI action authorization.
+- Billing state transitions.
+- Inventory reservations.
+- Notification policies.
+
+## 32.2 Integration Testing
+
+Cover:
+
+- Authentication.
+- Organization membership.
+- RLS.
+- Storage policies.
+- Product creation.
+- Checkout.
+- Payment webhooks.
+- Subscription transitions.
+- File uploads.
+- CSV exports.
+- Domain provisioning.
+- Realtime authorization.
+- Background jobs.
+- AI tools.
+
+## 32.3 End-to-End Testing
+
+Test complete flows:
+
+```text
+Create account
+↓
+Create organization
+↓
+Select business mode
+↓
+Choose template
+↓
+Import product
+↓
+Review imported product
+↓
+Publish storefront
+↓
+Customer visits storefront
+↓
+Customer places order
+↓
+Payment webhook arrives
+↓
+Owner receives notification
+↓
+Owner fulfills order
+↓
+Customer receives receipt
+↓
+Trial converts or is canceled
+```
+
+Also test:
+
+- Booking flow.
+- Quote flow.
+- Refund flow.
+- Domain setup.
+- Staff invitation.
+- Role restrictions.
+- Data export.
+- Account deletion.
+- Failed billing.
+- AI approval.
+- Storefront rollback.
+
+## 32.4 Performance Testing
+
+Test:
+
+- Storefront traffic spikes.
+- Checkout concurrency.
+- Booking race conditions.
+- Large catalog imports.
+- Large order exports.
+- Dashboard queries.
+- Realtime fanout.
+- Webhook bursts.
+- Queue backlogs.
+- Database failover.
+
+## 32.5 Tenant Isolation Testing
+
+This must be a release blocker.
+
+Test every tenant-sensitive route and tool with at least two organizations and multiple roles.
+
+---
+
+# 33. Product Design Requirements
+
+## 33.1 Dashboard UX
+
+The dashboard home should answer:
+
+- What needs attention?
+- How is the business performing?
+- What should happen next?
+- Did something fail?
+- Are there new customers, orders, bookings, or inquiries?
+
+Recommended cards:
+
+- New orders.
+- Revenue today.
+- Low-stock products.
+- Upcoming bookings.
+- Unanswered inquiries.
+- Billing status.
+- Trial status.
+- Failed payments.
+- Suggested next action.
+- Import review queue.
+
+## 33.2 Navigation
+
+Keep primary navigation under seven items:
+
+```text
+Home
+Orders
+Catalog
+Customers
+Growth
+Appearance
+Settings
+```
+
+Show contextual sections only when enabled:
+
+```text
+Bookings
+Inventory
+Analytics
+Team
+Billing
+```
+
+## 33.3 UX Rules
+
+- One primary action per screen.
+- Autosave drafts.
+- Provide undo where possible.
+- Show previews before publishing.
+- Explain errors in plain language.
+- Avoid technical terminology.
+- Provide manual editing for every AI result.
+- Make destructive actions explicit.
+- Keep frequent tasks within three clicks.
+- Provide useful empty states.
+- Support mobile dashboard access.
+- Never force customers into AI flows.
+- Use progressive disclosure.
+- Surface the next best action.
+
+---
+
+# 34. Phased Implementation Roadmap
+
+This is the recommended end-to-end execution sequence.
+
+## Phase 0: Product and Architecture Definition
+
+Deliverables:
+
+- Product requirements document.
+- Business capability map.
+- Target customer segments.
+- Pricing model.
+- Billing policy.
+- Trial policy.
+- Tenant lifecycle.
+- Domain model.
+- Threat model.
+- Architecture decision records.
+- Compliance requirements.
+- Design system foundation.
+- API standards.
+- Release strategy.
+- Disaster recovery objectives.
+
+Exit criteria:
+
+- Core product workflows approved.
+- Security boundaries approved.
+- Payment and billing assumptions documented.
+- Data ownership and retention policies documented.
+- Initial design prototypes approved.
+
+## Phase 1: Engineering Foundation
+
+Build:
+
+- Monorepo.
+- Shared TypeScript configuration.
+- Package boundaries.
+- CI/CD.
+- Environment management.
+- Secrets management.
+- Authentication.
+- User profiles.
+- Organizations.
+- Memberships.
+- Roles.
+- Permissions.
+- Audit logging.
+- Database migration system.
+- Tenant resolver.
+- Feature flags.
+- Error tracking.
+- OpenTelemetry.
+- Testing framework.
+
+Exit criteria:
+
+- Two tenants can coexist.
+- Cross-tenant access tests fail safely.
+- Role tests pass.
+- Preview deployments work.
+- Audit logs are generated.
+- Production-like staging environment exists.
+
+## Phase 2: Tenant Runtime and Configuration
+
+Build:
+
+- Tenant domain resolution.
+- Organization settings.
+- Configuration schemas.
+- Draft and published configuration.
+- Version history.
+- Preview mode.
+- Rollback.
+- Feature modules.
+- Template registry.
+- Theme tokens.
+- Navigation configuration.
+- SEO configuration.
+
+Exit criteria:
+
+- Tenant configuration is typed and validated.
+- Changes do not affect other tenants.
+- Preview is isolated from production.
+- Published versions can be rolled back.
+
+## Phase 3: Storefront Foundation
+
+Build:
+
+- Storefront routing.
+- Subdomains.
+- Tenant branding.
+- Template rendering.
+- Home page.
+- Catalog pages.
+- Product details.
+- Contact page.
+- Business hours.
+- Policies.
+- SEO metadata.
+- Sitemap.
+- Robots configuration.
+- Responsive behavior.
+- Caching.
+- Image optimization.
+
+Exit criteria:
+
+- A tenant can publish without developer involvement.
+- Template switching preserves tenant data.
+- Mobile and desktop storefront flows work.
+- Public content is cacheable and invalidated correctly.
+
+## Phase 4: Catalog and Content
+
+Build:
+
+- Products.
+- Services.
+- Categories.
+- Variants.
+- Options.
+- Collections.
+- Tags.
+- Media.
+- SEO content.
+- Draft and publish workflows.
+- Bulk editing.
+- Catalog import.
+- Review queue.
+
+Exit criteria:
+
+- Owners can create and manage catalog items.
+- Imported records are reviewable.
+- Catalog versioning is recoverable.
+- Public catalog data is tenant-isolated.
+
+## Phase 5: Orders and Checkout
+
+Build:
+
+- Cart.
+- Checkout.
+- Customer information.
+- Taxes.
+- Discounts.
+- Shipping and pickup.
+- Delivery zones.
+- Payment intents.
+- Orders.
+- Receipts.
+- Order timeline.
+- Fulfillment states.
+- Notifications.
+
+Exit criteria:
+
+- Test customers can complete checkout.
+- Duplicate requests do not duplicate orders.
+- Failed payments produce correct states.
+- Order events are complete and auditable.
+
+## Phase 6: Billing and Subscriptions
+
+Build:
+
+- Plans.
+- Trial subscriptions.
+- Payment verification.
+- Renewal reminders.
+- Billing portal.
+- Subscription synchronization.
+- Past-due handling.
+- Grace periods.
+- Restrictions.
+- Cancellation.
+- Export access.
+- Billing reconciliation.
+
+Exit criteria:
+
+- Trial transitions are correct.
+- Webhook replay is safe.
+- Failed renewal behavior is predictable.
+- Customers can cancel without support intervention.
+- Billing history is auditable.
+
+## Phase 7: Dashboard Operations
+
+Build:
+
+- Dashboard shell.
+- Overview.
+- Orders.
+- Catalog.
+- Customers.
+- Store appearance.
+- Business settings.
+- Billing.
+- Staff.
+- Exports.
+- Audit logs.
+- Notifications.
+- Search.
+
+Exit criteria:
+
+- Owners can run daily operations.
+- Staff roles are enforced.
+- Exports are complete.
+- Dashboard performance is acceptable with realistic data volumes.
+
+## Phase 8: Inventory and Fulfillment
+
+Build:
+
+- Inventory locations.
+- Stock levels.
+- Reservations.
+- Adjustments.
+- Transfers.
+- Low-stock alerts.
+- Fulfillment workflows.
+- Delivery and pickup scheduling.
+
+Exit criteria:
+
+- Inventory cannot become inconsistent under concurrent orders.
+- Reservation release works on payment failure.
+- Stock movement history is immutable.
+
+## Phase 9: Bookings and Services
+
+Build:
+
+- Service catalog.
+- Staff profiles.
+- Resources.
+- Availability.
+- Exceptions.
+- Deposits.
+- Appointment states.
+- Reminders.
+- Rescheduling.
+- Cancellations.
+- Calendar integrations.
+
+Exit criteria:
+
+- Double-booking is prevented.
+- Time zones are handled correctly.
+- Booking notifications are reliable.
+- Appointment history is auditable.
+
+## Phase 10: Quotes, Reviews, and Marketing
+
+Build:
+
+- Quote forms.
+- Inquiry workflows.
+- Customer messaging.
+- Review requests.
+- Reviews.
+- Promotions.
+- Coupons.
+- Segments.
+- Campaigns.
+- Abandoned-cart recovery.
+- Automated communications.
+
+Exit criteria:
+
+- Leads can become orders.
+- Promotions calculate correctly.
+- Consent preferences are respected.
+- Automated messaging is retry-safe.
+
+## Phase 11: AI Platform
+
+Build:
+
+- AI assistant.
+- Tool registry.
+- Action contracts.
+- Approval workflows.
+- AI audit logs.
+- Catalog import intelligence.
+- Duplicate detection.
+- Content generation.
+- Analytics explanation.
+- AI usage limits.
+- Model fallback.
+- Cost tracking.
+- Review queue.
+
+Exit criteria:
+
+- AI cannot bypass tenant authorization.
+- Mutations are attributable and reversible.
+- Unapproved customer-facing changes cannot publish.
+- Raw SQL and arbitrary code execution are impossible.
+- AI costs and failures are visible.
+
+## Phase 12: Domains and Integrations
+
+Build:
+
+- Subdomain provisioning.
+- Custom domains.
+- Domain verification.
+- SSL.
+- Redirects.
+- Email providers.
+- SMS providers.
+- Calendar integrations.
+- Shipping integrations.
+- Tax integrations.
+- Accounting integrations.
+- Webhooks.
+- API keys.
+
+Exit criteria:
+
+- Ownership verification is required.
+- Domain routing is observable.
+- SSL failures are detected.
+- Integrations can be disabled safely.
+- API keys are scoped and revocable.
+
+## Phase 13: Analytics and Reporting
+
+Build:
+
+- Tenant analytics.
+- Platform analytics.
+- Revenue reporting.
+- Conversion metrics.
+- Inventory reporting.
+- Booking utilization.
+- Customer retention.
+- Trial conversion reporting.
+- Usage reporting.
+- Exportable reports.
+
+Exit criteria:
+
+- Tenant data is separated from platform data.
+- Metrics are reproducible.
+- Reports perform acceptably at expected scale.
+- Personal data collection is minimized.
+
+## Phase 14: Security and Reliability Hardening
+
+Build:
+
+- Full RLS test matrix.
+- Storage isolation tests.
+- Realtime authorization tests.
+- Threat model updates.
+- Security headers.
+- Rate limits.
+- Abuse controls.
+- Malware scanning.
+- Dynamic scans.
+- Penetration testing.
+- Backup restore drills.
+- Disaster recovery.
+- Incident runbooks.
+- Status page.
+- On-call process.
+
+Exit criteria:
+
+- No unresolved critical findings.
+- High-risk findings have approved remediation plans.
+- Recovery objectives are tested.
+- Tenant isolation is independently verified.
+- Incident response is operational.
+
+## Phase 15: Controlled Production Beta
+
+Launch with a limited customer group.
+
+Track:
+
+- Onboarding completion.
+- Time to publish.
+- Import accuracy.
+- First order success.
+- First booking success.
+- Support volume.
+- Payment failures.
+- Dashboard usability.
+- AI acceptance rate.
+- Trial conversion intent.
+- Cancellation reasons.
+- Operational failures.
+
+Do not expand scope based on isolated requests. Prioritize repeated operational problems.
+
+## Phase 16: Public Launch
+
+Required before launch:
+
+- Legal documents.
+- Pricing and billing support.
+- Customer support workflow.
+- Status page.
+- Backups.
+- Restore verification.
+- Data export.
+- Cancellation testing.
+- Security review.
+- Monitoring alerts.
+- Incident owner.
+- On-call coverage.
+- Domain provisioning.
+- Payment reconciliation.
+- Abuse response.
+- Documentation.
+- Customer onboarding content.
+- Support knowledge base.
+
+## Phase 17: Post-Launch Scale
+
+After launch:
+
+- Add read replicas.
+- Introduce dedicated search when needed.
+- Separate high-volume workers.
+- Add regional infrastructure where justified.
+- Improve caching.
+- Add advanced analytics warehouse.
+- Add enterprise organizations.
+- Add SSO and SCIM.
+- Add API marketplace.
+- Add developer extensions.
+- Add sandboxed custom code only after strong demand.
+- Expand localization.
+- Add multi-currency and multi-region support.
+- Introduce usage-based billing if required.
+
+---
+
+# 35. Enterprise and Advanced Capabilities
+
+The final platform should be designed to support later enterprise features without requiring a rewrite.
+
+Potential extensions:
+
+- SSO.
+- SCIM provisioning.
+- Enterprise audit exports.
+- Organization hierarchies.
+- Multiple business locations.
+- Franchise management.
+- Approval workflows.
+- Custom roles.
+- Custom domains at scale.
+- Dedicated infrastructure.
+- Regional data residency.
+- Advanced tax integrations.
+- ERP integrations.
+- Accounting integrations.
+- Warehouse integrations.
+- Custom API applications.
+- Webhook subscriptions.
+- Sandboxed custom code.
+- Enterprise support plans.
+
+Arbitrary code execution should remain a separate product capability with:
+
+- Sandboxed runtime.
+- CPU and memory limits.
+- Network egress control.
+- Dependency scanning.
+- Versioned releases.
+- Human approval.
+- Permission-scoped APIs.
+- Automatic rollback.
+- Execution logs.
+- Billing limits.
+
+---
+
+# 36. Operational Team Structure
+
+Recommended long-term team:
+
+```text
+Product:
+- Product lead
+- Product managers by domain
+- Product designer
+- UX researcher
+
+Engineering:
+- Platform engineers
+- Frontend engineers
+- Backend engineers
+- Payments engineer
+- Data engineer
+- AI engineer
+- DevOps/SRE engineer
+- Security engineer
+
+Quality:
+- QA automation engineer
+- Performance engineer
+- Accessibility specialist
+
+Operations:
+- Customer implementation lead
+- Support team
+- Billing operations
+- Trust and safety
+- Compliance owner
+- Incident manager
+
+External:
+- Penetration testing firm
+- Legal counsel
+- Tax advisor
+- Compliance advisor
+```
+
+The first engineering priority should be:
+
+1. Tenant isolation.
+2. Authorization.
+3. Payments.
+4. Operational workflows.
+5. Reliability.
+6. Observability.
+7. AI.
+
+AI should not dominate the architecture or staffing before the operational foundation is stable.
+
+---
+
+# 37. Launch Gates
+
+The platform should not launch broadly until all of the following are true:
+
+## Product
+
+- A business can complete onboarding.
+- A business can publish a storefront.
+- A customer can purchase, book, or submit an inquiry.
+- The business can fulfill the transaction.
+- Customers receive correct notifications.
+- The dashboard provides useful daily actions.
+
+## Security
+
+- Cross-tenant access is blocked.
+- RLS tests pass.
+- Storage isolation tests pass.
+- Realtime authorization tests pass.
+- Sensitive operations require re-authentication.
+- Support access is audited.
+- Secrets are protected.
+- Security review is complete.
+
+## Billing
+
+- Trial conversion works.
+- Failed payments work.
+- Grace periods work.
+- Cancellation works.
+- Refunds work.
+- Webhook replay is safe.
+- Billing state is reconciled.
+
+## Reliability
+
+- Backups are verified.
+- Restore drills are complete.
+- Monitoring is active.
+- Alerts are routed.
+- Job failures are recoverable.
+- Webhooks are replayable.
+- Disaster recovery objectives are tested.
+
+## Compliance
+
+- Terms and privacy policies are published.
+- Consent is recorded.
+- Export workflow works.
+- Deletion workflow works.
+- Retention policy exists.
+- Vendors are documented.
+- Incident response process exists.
+
+## Operations
+
+- Support can resolve common issues.
+- Status page is live.
+- Runbooks exist.
+- On-call ownership exists.
+- Customer communication templates exist.
+- Billing reconciliation is operational.
+
+---
+
+# 38. Final Build Priorities
+
+The platform should be implemented in this order:
+
+```text
+Identity and organizations
+↓
+Tenant resolution
+↓
+Authorization and RLS
+↓
+Audit logging
+↓
+Configuration and templates
+↓
+Storefront runtime
+↓
+Catalog
+↓
+Publishing
+↓
+Cart and checkout
+↓
+Payments
+↓
+Orders
+↓
+Dashboard operations
+↓
+Billing state machine
+↓
+Notifications
+↓
+Inventory
+↓
+Bookings
+↓
+Quotes and marketing
+↓
+Imports
+↓
+AI assistant
+↓
+Domains and integrations
+↓
+Analytics
+↓
+Enterprise capabilities
+```
+
+Do not build these simultaneously at the beginning:
+
+- Unrestricted AI code generation.
+- Autonomous production deployments.
+- Complex visual editors.
+- Advanced analytics warehouse.
+- Arbitrary custom business logic.
+- Autonomous security patching.
+- Large numbers of templates.
+- Every business type.
+
+The production-ready end state is a stable, secure, observable system where:
+
+- Businesses publish quickly.
+- Customers complete purchases or bookings reliably.
+- Owners manage daily operations from one dashboard.
+- Billing behaves predictably.
+- AI accelerates work without bypassing controls.
+- Configuration changes are previewable and reversible.
+- Every important operation is auditable.
+- Data is exportable and portable.
+- Tenant isolation is continuously tested.
+- Failures are visible and recoverable.
+- The platform can scale without turning every tenant into a separate codebase.

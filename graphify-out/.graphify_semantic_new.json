@@ -1,0 +1,173 @@
+{
+  "nodes": [
+    {
+      "id": "commerce_os",
+      "label": "Commerce OS",
+      "type": "module",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "marketing_website",
+      "label": "Marketing Website",
+      "type": "module",
+      "source_file": "txt/c.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "tenant_storefront",
+      "label": "Tenant Storefront",
+      "type": "module",
+      "source_file": "txt/c.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "private_tenant_dashboard",
+      "label": "Private Tenant Dashboard",
+      "type": "module",
+      "source_file": "txt/c.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "multi_tenant_architecture",
+      "label": "Multi-tenant architecture",
+      "type": "concept",
+      "source_file": "txt/_b.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "configuration_as_code",
+      "label": "Configuration as Code",
+      "type": "feature",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "billing_state_machine",
+      "label": "Billing State Machine",
+      "type": "feature",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "tenant_isolation",
+      "label": "Tenant Isolation",
+      "type": "feature",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "row_level_security",
+      "label": "Row Level Security",
+      "type": "feature",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "stripe",
+      "label": "Stripe",
+      "type": "module",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "postgresql_supabase",
+      "label": "PostgreSQL/Supabase",
+      "type": "module",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "ai_action_contracts",
+      "label": "AI Action Contracts",
+      "type": "feature",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "data_portability",
+      "label": "Data Portability",
+      "type": "feature",
+      "source_file": "txt/_a.pdf.txt",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "client_task_pipeline_png",
+      "label": "Client Task Pipeline Diagram",
+      "type": "file",
+      "source_file": "flowchart/Client Task Pipeline for Mermaid-2026-10-06-143606.png",
+      "confidence": "EXTRACTED"
+    }
+  ],
+  "edges": [
+    {
+      "source": "marketing_website",
+      "target": "commerce_os",
+      "label": "relates to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "tenant_storefront",
+      "target": "commerce_os",
+      "label": "relates to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "private_tenant_dashboard",
+      "target": "commerce_os",
+      "label": "relates to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "commerce_os",
+      "target": "multi_tenant_architecture",
+      "label": "implements",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "commerce_os",
+      "target": "configuration_as_code",
+      "label": "uses",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "billing_state_machine",
+      "target": "stripe",
+      "label": "implements",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "tenant_isolation",
+      "target": "row_level_security",
+      "label": "uses",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "row_level_security",
+      "target": "postgresql_supabase",
+      "label": "uses",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "commerce_os",
+      "target": "ai_action_contracts",
+      "label": "uses",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "commerce_os",
+      "target": "data_portability",
+      "label": "implements",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "client_task_pipeline_png",
+      "target": "commerce_os",
+      "label": "visualizes pipeline for",
+      "confidence": "EXTRACTED"
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

@@ -1,0 +1,5 @@
+import Link from "next/link";
+import { signUp } from "@/app/actions";
+import { AuthForm } from "@/app/_components/auth-form";
+import { storefrontTemplates } from "@/lib/storefront-templates";
+export default async function SignUp({searchParams}:{searchParams:Promise<{template?:string}>}){const{template}=await searchParams;const selected=template&&storefrontTemplates.some((item)=>item.id===template)?template:"essential";const theme=storefrontTemplates.find((item)=>item.id===selected)!;return <main className="auth-wrap"><section className="auth-card"><Link className="brand" href="/"><span className="brand-mark">c.</span>Commerce OS</Link><h1>Let’s get your shop online.</h1><p>Create your account. Your business workspace and 30-day trial are prepared when your storefront is published.</p><div className="notice">Selected storefront design: <b>{theme.name}</b></div><AuthForm action={signUp} signup template={selected}/><div className="login-row" style={{marginTop:20}}><span>Already have an account?</span><Link href="/sign-in" style={{color:"#27664b",fontWeight:700}}>Sign in →</Link></div></section></main>}

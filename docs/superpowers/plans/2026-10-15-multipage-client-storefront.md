@@ -45,7 +45,7 @@
 - Produces `StorePageType = "about" | "contact" | "faq" | "shipping_returns"` and a typed `StorePageContent` discriminated union.
 - Produces `parseStorePageContent(pageType, input)` using Zod; return a typed success value or field-level validation errors, never render arbitrary HTML.
 - Produces `isStorePageReady(pageType, content)` for publish checklist validation.
-- `apps/web/src/lib/storefront-utils.ts` exports `createProductSlug(name, productId)` for deterministic, readable, collision-resistant per-product slugs and `isOrderTrackingEnabled(plan)` returning true only for `plus` and `pro`.
+- `apps/web/src/lib/storefront-utils.ts` exports `createProductSlug(name, productId)` for deterministic, readable, collision-resistant per-product slugs and `isOrderTrackingEnabled(plan)` returning true only for `plus` and `pro`. Product slugs append the complete lowercase alphanumeric product UUID so same-name products with shared UUID prefixes cannot collide; explicit slugs must be URL-safe single segments.
 
 - [ ] **Step 1: Write failing schema and helper tests**
   - `parseStorePageContent` accepts valid About, Contact, FAQ, and Shipping & Returns payloads.
@@ -66,13 +66,13 @@
 - Modify: `apps/web/src/lib/store-pages.test.ts` only if database-compatible values require a shared fixture.
 
 **Interfaces:**
-- `public.store_pages`: one row per `(organization_id, page_type)`, structured `content jsonb`, nullable `published_at`, timestamps, constrained page type, and tenant foreign key.
-- `public.products.slug`: non-null, unique within `organization_id`; existing rows receive deterministic readable slugs with collision handling; new rows receive an immutable name-based slug with an ID suffix when not explicitly provided.
+- `public.store_pages`: one row per `(organization_id, page_type)`, structured editable `content jsonb`, nullable `published_content jsonb` live snapshot, nullable `published_at`, timestamps, constrained page type, and tenant foreign key. Saving edits updates only `content`; publishing copies validated `content` into `published_content` and sets `published_at`; unpublishing hides the snapshot without deleting the draft.
+- `public.products.slug`: non-null, unique within `organization_id`; existing rows receive a normalized readable name (or `product`) plus the complete lowercase alphanumeric UUID; new rows use the same immutable form when slug is omitted/blank. A constraint rejects explicitly supplied slugs that are not URL-safe single segments.
 - RLS grants merchant read/write under existing organization role and workspace-entitlement rules; anonymous reads are limited to published pages for published stores. Do not grant anonymous writes or broad table access.
 
-- [ ] **Step 1: Write pgTAP tests for page-type constraints, tenant ownership, anonymous visibility of published pages only, no cross-tenant access, product slug uniqueness, and slug immutability when a product name changes.**
+- [ ] **Step 1: Write pgTAP tests for page-type constraints, tenant ownership, anonymous visibility of published snapshots only, no cross-tenant access, product slug uniqueness, and slug immutability when a product name changes.**
 - [ ] **Step 2: Configure the local Supabase CLI project without adding project secrets; run `supabase test db` and confirm the tests fail against the pre-migration schema.**
-- [ ] **Step 3: Implement the forward-only migration, including safe backfill, indexes, grants, RLS policies, and slug-generation trigger.**
+- [ ] **Step 3: Implement the forward-only migration, including draft/live page snapshots, safe product slug backfill, indexes, grants, RLS policies, and slug-generation trigger.**
 - [ ] **Step 4: Run `supabase test db` against the local database and confirm all policy and constraint tests pass.**
 - [ ] **Step 5: Inspect the generated SQL diff and verify it does not alter existing product/order/payment or store-availability behavior.**
 
@@ -87,8 +87,8 @@
 - Test: `apps/web/src/app/store/pages/actions.test.ts`
 
 **Interfaces:**
-- `saveStorePage(formData): Promise<ActionState>` validates with `parseStorePageContent`, resolves the signed-in user's organization, and upserts only that tenant's draft.
-- `setStorePagePublished(formData): Promise<ActionState>` validates readiness server-side before setting `published_at`; unpublish remains possible without deleting content.
+- `saveStorePage(formData): Promise<ActionState>` validates with `parseStorePageContent`, resolves the signed-in user's organization, and saves only that tenant's draft `content`, leaving any published snapshot unchanged.
+- `setStorePagePublished(formData): Promise<ActionState>` validates readiness server-side before copying `content` to `published_content` and setting `published_at`; unpublish hides the snapshot without deleting the draft.
 - `StorePagesEditor` receives the page records and selected template; renders bounded forms for About, Contact, FAQ, and Shipping & Returns; displays draft/published state, page-specific checklist, and desktop/mobile preview.
 
 - [ ] **Step 1: Write failing action tests for unauthenticated saves, invalid content, cross-tenant IDs, incomplete publish, valid publish, and unpublish.**
@@ -158,7 +158,7 @@
 
 **Interfaces:**
 - Shared page renderer receives `StorePageType`, validated content, template ID, and store identity; outputs semantic page content without interpreting arbitrary HTML.
-- Missing or unpublished pages return `notFound()` and are absent from nav/footer. Missing optional fields are omitted.
+- Public page fetches select `published_content` only. Missing or unpublished pages return `notFound()` and are absent from nav/footer. Missing optional fields are omitted.
 - Metadata uses merchant-supplied page titles/descriptions when present; otherwise uses safe store/page names, never fabricated business claims.
 
 - [ ] **Step 1: Write failing tests for unpublished/missing page behavior, omitted optional contact fields, FAQ content, and shipping policy completeness.**

@@ -52,12 +52,12 @@ Add a dedicated Store pages area in the merchant dashboard. It should provide a 
 1. Select a page and see why it helps customers.
 2. Fill clearly labeled, bounded fields (About story; contact email/phone/address or service area/hours; FAQ pairs; delivery areas/timing/charges; return eligibility/window/steps/contact).
 3. Preview desktop and mobile using the store's selected sector template.
-4. Save as draft, inspect a page-specific checklist, then publish/unpublish that page.
+4. Save as draft, inspect a page-specific checklist, then publish/unpublish that page. Editing a published page must not replace its live version until the merchant explicitly publishes the draft.
 5. Preview the complete storefront navigation and footer before publishing.
 
 Validation prevents whitespace-only content, unsafe URLs, oversized text/media, and incomplete mandatory fields. Optional fields are omitted rather than filled with generic copy. The existing store can remain live while a page is drafted or edited. Store-page publication is distinct from store publication and does not restart or alter the subscription trial.
 
-Suggested persistence: a tenant-scoped `store_pages` record keyed by organization and page type, with validated structured JSON content, published state, timestamps, and metadata needed for SEO. Keep fields schema-driven and versionable; avoid accepting arbitrary HTML. Public reads must return only published pages belonging to an available, published store. Merchant writes must be constrained by existing organization roles and subscription workspace entitlements. Add appropriate indexes, grants, and RLS policies in a new forward-only Supabase migration.
+Suggested persistence: a tenant-scoped `store_pages` record keyed by organization and page type, with validated structured draft JSON content, a separate published-content snapshot, publication state, timestamps, and metadata needed for SEO. Publishing copies the validated draft to the published snapshot; editing a live page leaves its current snapshot intact until republished. Keep fields schema-driven and versionable; avoid accepting arbitrary HTML. Public reads must return only published snapshots belonging to an available, published store. Merchant writes must be constrained by existing organization roles and subscription workspace entitlements. Add appropriate indexes, grants, and RLS policies in a new forward-only Supabase migration.
 
 For products, add a stable per-store slug (unique within the store) and use it for detail URLs. Existing products need deterministic backfilled slugs with collision handling. Keep the current product model and checkout payload intact; additional gallery/category fields are optional only if the implementation can support them end-to-end without blocking this delivery.
 
@@ -107,7 +107,7 @@ All pages must maintain readable foreground/background contrast, visible keyboar
 
 1. A customer can navigate Home → Shop → product → cart → checkout without losing cart state or breaking existing order/payment behavior.
 2. Product details have stable readable routes and display the correct store's published product only.
-3. Merchants can draft, preview, publish, and unpublish About, Contact, FAQ, and Shipping & Returns content in the dashboard.
+3. Merchants can draft, preview, publish, and unpublish About, Contact, FAQ, and Shipping & Returns content in the dashboard; saving an edit never changes the currently published snapshot until explicit publish.
 4. Missing content is never fabricated; unpublished pages are not linked publicly; existing stores remain usable.
 5. Public routes are tenant-isolated and honor store availability. Draft content is never returned to anonymous users.
 6. Order chat remains available on every plan. Tracking is enabled only for Plus/Pro and cannot reveal a different customer's order.
